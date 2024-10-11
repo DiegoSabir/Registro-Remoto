@@ -1,5 +1,5 @@
 import flet as ft
-from conexion import authenticate  # Importar la función de autenticación
+from conexion import authenticate, get_employee_id, get_attendance_records  # Importar la función de autenticación
 from menu import menu_view  # Importar la vista del menú
 
 # El contenedor principal contiene el contenido de la pantalla
@@ -44,10 +44,15 @@ def main_view(page: ft.Page):
         uid = authenticate(email, password)
         if uid:
             # Navegar al menú si el usuario existe
-            menu_view(page)
+            get_attendance_records(uid, password)
+            employee_id = get_employee_id(uid, password)
+            if employee_id:
+                menu_view(page, uid, password, employee_id)
+            else:
+                show_snack_bar()
         else:
             # Mostrar SnackBar si el usuario no existe
-            show_snack_bar()
+            show_snack_bar() 
 
     body = ft.Container(
         ft.Row([
@@ -66,7 +71,7 @@ def main_view(page: ft.Page):
                     # Botón de Iniciar
                     ft.Container(
                         ft.ElevatedButton(content=ft.Text('INICIAR', color='white', weight='w500'),
-                                          width=280, bgcolor='black', on_click=handle_login),
+                                        width=280, bgcolor='black', on_click=handle_login),
                         alignment=ft.alignment.center
                     ),
                 ], alignment=ft.MainAxisAlignment.SPACE_EVENLY),
