@@ -8,57 +8,60 @@ def menu_view(page: ft.Page, uid, password, employee_id):
     # Verificar si el usuario ya está fichando
     ya_fichando = verificar_asistencia(uid, password, employee_id)
 
-    # Crear el contenido del menú
-    page.add(
-    ft.Container(
-        content=ft.Text("Bienvenido al menú de asistencia", size=24, weight="bold", color="blue"),
-        alignment=ft.alignment.top_center,
-        margin=40  # Cambiado para usar un diccionario
-    )
-)
-
-    # Crear botones de fichaje
+    # Crear botones de fichaje con el mismo estilo
     entrada_button = ft.ElevatedButton(
-        text="🕘 Fichar Entrada",
+        content=ft.Text("🕘 Fichar Entrada", color="white", weight="bold"),
         on_click=lambda e: gestionar_fichaje(uid, password, employee_id, 'entrada', entrada_button, salida_button, page),
         style=ft.ButtonStyle(
-            padding=ft.padding.symmetric(vertical=40, horizontal=60),
+            padding=ft.padding.symmetric(vertical=20, horizontal=40),
             shape=ft.RoundedRectangleBorder(20),  # Botones con esquinas redondeadas
-            bgcolor=('#28A745'),
-            color=('#FFFFFF'),
-        )
+            bgcolor='#28A745',
+        ),
+        visible=not ya_fichando  # Mostrar según el estado de fichaje
     )
 
     salida_button = ft.ElevatedButton(
-        text="🚪 Fichar Salida",
+        content=ft.Text("🚪 Fichar Salida", color="white", weight="bold"),
         on_click=lambda e: gestionar_fichaje(uid, password, employee_id, 'salida', entrada_button, salida_button, page),
         style=ft.ButtonStyle(
-            padding=ft.padding.symmetric(vertical=40, horizontal=60), 
+            padding=ft.padding.symmetric(vertical=20, horizontal=40),
             shape=ft.RoundedRectangleBorder(20),  # Botones con esquinas redondeadas
-            bgcolor=('#DC3545'),
-            color=('#FFFFFF'),
-            
-        )
+            bgcolor='#DC3545',
+        ),
+        visible=ya_fichando  # Mostrar según el estado de fichaje
     )
 
-    # Mostrar solo el botón correspondiente según la verificación
-    if ya_fichando:
-        salida_button.visible = True
-        entrada_button.visible = False  # Ocultar el de entrada
-    else:
-        entrada_button.visible = True
-        salida_button.visible = False  
-
-    # Añadir los botones a la página
-    page.add(
-        ft.Row(
-            controls=[entrada_button, salida_button],
+    # Contenedor principal que incluye el mensaje y los botones
+    menu_container = ft.Container(
+        content=ft.Column(
+            controls=[
+                ft.Text("Bienvenido al menú de asistencia", size=24, weight="bold", color="white", text_align="center"),
+                ft.Row(
+                    controls=[entrada_button, salida_button],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    spacing=20
+                )
+            ],
             alignment=ft.MainAxisAlignment.CENTER,
-            spacing=20,  # Espacio entre botones
-            wrap=True # Permite que los botones se ajusten si la pantalla es pequeña
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=30
+        ),
+        gradient=ft.LinearGradient(['#27AFE3', '#EC4A6F']),  # Fondo con gradiente
+        width=325,
+        height=450,
+        border_radius=20,
+        padding=20,
+        alignment=ft.alignment.center,
+    )
+
+    # Agregar el contenedor a la página
+    page.add(
+        ft.Container(
+            content=menu_container,
+            alignment=ft.alignment.center,
+            padding=10,
         )
     )
 
     # Actualizar la página al final
     page.update()
-
