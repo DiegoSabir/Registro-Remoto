@@ -43,6 +43,18 @@ def list_employees(uid, password):
     for employee in employees:
         print(employee)
 
+def obtener_nombre_usuario(uid, password, employee_uid):
+    models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
+    employee = models.execute_kw(DB, uid, password,
+                                'hr.employee', 'search_read', 
+                                [[['id', '=', employee_uid]]], 
+                                {'fields': ['name'], 'limit': 1})
+    if employee:
+        return employee[0]['name']
+    else:
+        return "Empleado no encontrado."
+
+
 def get_attendance_records(uid, password):
     """Obtener registros de asistencia."""
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')

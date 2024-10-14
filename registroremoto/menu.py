@@ -1,5 +1,5 @@
 import flet as ft
-from conexion import gestionar_fichaje, verificar_asistencia  # Importa la función gestionar_fichaje
+from conexion import gestionar_fichaje, verificar_asistencia, obtener_nombre_usuario  # Importa la función gestionar_fichaje
 
 def menu_view(page: ft.Page, uid, password, employee_id):
     # Limpiar la página anterior
@@ -7,6 +7,7 @@ def menu_view(page: ft.Page, uid, password, employee_id):
 
     # Verificar si el usuario ya está fichando
     ya_fichando = verificar_asistencia(uid, password, employee_id)
+    nombre = obtener_nombre_usuario(uid, password, employee_id)
 
     # Crear botones de fichaje con el mismo estilo
     entrada_button = ft.ElevatedButton(
@@ -35,7 +36,7 @@ def menu_view(page: ft.Page, uid, password, employee_id):
     menu_container = ft.Container(
         content=ft.Column(
             controls=[
-                ft.Text("Bienvenido al menú de asistencia", size=24, weight="bold", color="white", text_align="center"),
+                ft.Text("Bienvenido al menú: "+ nombre, size=24, weight="bold", color="white", text_align="center"),
                 ft.Row(
                     controls=[entrada_button, salida_button],
                     alignment=ft.MainAxisAlignment.CENTER,
