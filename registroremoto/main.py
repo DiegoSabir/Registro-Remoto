@@ -90,15 +90,14 @@ def main_view(page: ft.Page):
 
 def main(page: ft.Page):
     # Configuración de la ventana principal:
-    page.window.width = 600  # Actualizado
-    page.window.height = 520  # Actualizado
+    page.window.width = 600
+    page.window.height = 520
     page.padding = 0
     page.vertical_alignment = "center"
     page.horizontal_alignment = "center"
 
     # Cargar la vista principal
     main_view(page)
-
 
 # Inicializar la aplicación
 ft.app(target=main)

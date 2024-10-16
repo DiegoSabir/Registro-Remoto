@@ -103,6 +103,7 @@ def verificar_asistencia(uid, password, employee_id):
     if not isinstance(employee_id, int):
         try:
             employee_id = int(employee_id)
+
         except ValueError:
             print("Error: employee_id no es un número entero válido")
             return False
@@ -113,6 +114,7 @@ def verificar_asistencia(uid, password, employee_id):
                                             [[['employee_id', '=', employee_id], ['check_out', '=', False]]],
                                             {'fields': ['id']})
         return len(attendance_records) > 0  # Devuelve True si hay un registro activo
+    
     except Exception as e:
         print("Error al verificar asistencia activa:", e)
         return False
@@ -127,6 +129,7 @@ def fichar_entrada(uid, password, employee_id):
                                         [{'employee_id': employee_id, 'check_in': current_time}])
         print(f"Entrada registrada con éxito (ID: {attendance_id}).")
         return True
+    
     except Exception as e:
         print("Error al fichar la entrada:", e)
         return False
@@ -152,6 +155,7 @@ def fichar_salida(uid, password, employee_id):
         else:
             print("No se encontró un registro de entrada para este empleado.")
             return False
+        
     except Exception as e:
         print("Error al registrar la salida:", e)
         return False

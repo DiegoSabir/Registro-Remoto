@@ -15,7 +15,7 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         on_click=lambda e: gestionar_fichaje(uid, password, employee_id, 'entrada', entrada_button, salida_button, page),
         style=ft.ButtonStyle(
             padding=ft.padding.symmetric(vertical=20, horizontal=40),
-            shape=ft.RoundedRectangleBorder(20),  # Botones con esquinas redondeadas
+            shape=ft.RoundedRectangleBorder(20),
             bgcolor='#28A745',
         ),
         visible=not ya_fichando  # Mostrar según el estado de fichaje
@@ -26,7 +26,7 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         on_click=lambda e: gestionar_fichaje(uid, password, employee_id, 'salida', entrada_button, salida_button, page),
         style=ft.ButtonStyle(
             padding=ft.padding.symmetric(vertical=20, horizontal=40),
-            shape=ft.RoundedRectangleBorder(20),  # Botones con esquinas redondeadas
+            shape=ft.RoundedRectangleBorder(20),
             bgcolor='#DC3545',
         ),
         visible=ya_fichando  # Mostrar según el estado de fichaje
@@ -41,13 +41,18 @@ def menu_view(page: ft.Page, uid, password, employee_id):
                     controls=[entrada_button, salida_button],
                     alignment=ft.MainAxisAlignment.CENTER,
                     spacing=20
-                )
+                ),
+                ft.Container(
+                    ft.ElevatedButton(content=ft.Text('Agregar dieta de viaje', color='white', weight='w500'),
+                        width=280, bgcolor='black'),
+                        alignment=ft.alignment.center
+                ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=30
         ),
-        gradient=ft.LinearGradient(['#27AFE3', '#EC4A6F']),  # Fondo con gradiente
+        gradient=ft.LinearGradient(['#27AFE3', '#EC4A6F']),
         width=325,
         height=450,
         border_radius=20,
