@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "registro-remoto",
+  "private_key_id": "5f55fcdc5d241e9e2483f4f0b8c454a08932f221",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDqrNaJI1UxBQVs\nqpbv9jaCF8aoJfxCCnyJvaEPg/auAyuV4Qm3ZxIvMI0c0WFRTDjnQwVKpAT5L5rl\n8/geV/sCuOok4mckQ24mHFfRa63MnbE/pH3A5TG5wrk3YhJY9ZEJDZvaGEdmxFNp\nyqZbOB6l30ieYrwm+rXdqIu8WhukeJEungsshlVahRDIxS7UE2S29iZjGrf9jmYq\nrME6hRdXwJlu/qs4uUlzoBlz/FWJ1x4mnqe97BtNzo1qw8JlwsAoyM3JQGmtc9Vr\nN8nzhEGHeIGnpPIEyf6EzZgF02OzSkcRMk8J24JmLGgPqpi0HmY3abMUio3winNG\n8PxkHUwfAgMBAAECggEAahuxOzvDGtGC5OHzMlfYyJS4ibH3L+Mu8VbRGsNXx9F+\nJRwl+Qu9IKIqw+N2RbyZpBNdMqUb7JHWT3Ay+YFdaRs0H25RJYfpp4i8OmAeKv0I\nNlcJVy0qgSwm9AA/fIK4S+gf1oqQykotzxFGi8tBrE1bt+W73kIQ9kLtv8Hcas4N\nZdmkC+Q46z6NJLQXm1Z3P2NEGzDYaLmIF93afJFyXd1fpEv9pAbqNV0dgMtDMv7O\ni9HrlTvF3EAx30DyGSfV5GkpJVSsj4gIl6L8l9delu8JSpraG6Zu3p/zsGX4aB2X\nKUJKsMkpFixcVorb/MnHQL7occj67VKW1wqzWm07UQKBgQD4xohmyFboI9sMQ9ym\ncw8h1XksgvGZeRZDZKLex5S3PsN9X8yrS5niJhXzTWCgTgCnvVN1x/kG43a4iGr9\nY9DI7vQJxCQeTcpU08x3qp/BlwwgF6Mry8+vfeCH4uRfalaq1kalU5cYhHsUEEwO\nkXz2nxU4D7Sj2LcRwOD0BqWpTwKBgQDxfXql16q9Rd+mikekliEtAN6tKiAPaC5M\naTGpGTwbWmTL+idKwRRpmBwvxFkx8TDlniprRG3OkDDXi6Qw0+qR9+1C9ab9Dbbq\n+QCQt5YkpYDiW7eXoJHSecogu8xGqcm6wyOTdyjRIBgEdkBI9LGiTWoDE01yyJq8\no8olppjcMQKBgCV+Hk6HQPnJdZjanWWEj7JErvdzYKAFrMJJZ3Z108buMZ4ykvD5\n+t4naUV60uY1+0lMckic874DCAB1ptI7edrekG7sXZknlifEp9sdHuiZMB2iElhm\nZg2HxhAUtOBgcWFb29fMykfKp5X1gtDrQk8U2KjTTSEoZybIz95XJh5nAoGAHJU6\niBifx+lWUHL7idqPMLFyqdJbmxc8q6Sj0R0AhUhMt+vy7KEv1lO/ulOmLwgaPoNb\nB/lAefuNHGYV2AWtNPvAZHWI/1i5NtSkIXzpU4sXVzN95n+F4wCxUPCJfC+qheWE\n93ZaKW6ACT8p2rjDsa8yBg0p1JUz43ILgitW2nECgYAyir3tJ+y0TfeYKdTVL/L4\n6AVw/d4ShnqCiQRtKK+CkQYBS/Fc3TuyBy716A9jdNvZPg6ekTGH8B96EfHsva5/\nmHgWsek7EIroDuF16PLMBWUPwb/pS9jORr54OIRcMdqDb7sDOP10H3teJIGCNS8I\na/dFWEXj9O9J8LC6gRXTdw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-1d4gx@registro-remoto.iam.gserviceaccount.com",
+  "client_id": "116125040972516064654",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-1d4gx%40registro-remoto.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
