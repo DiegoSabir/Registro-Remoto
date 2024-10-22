@@ -1,21 +1,25 @@
-import uuid 
-
+import uuid
 import flet
 from flet import TextField, Column, ListTile, PopupMenuButton, PopupMenuItem, ElevatedButton, icons, Page, Text, Container, Image, Row, alignment, LinearGradient
 
 import firebase_admin
 from firebase_admin import firestore, credentials
 
-cred = credentials.Certificate("C:/Users/desarrollo/Documents/GitHub/Registro-Remoto/prueba/serviceAccount.json")
+from connection import OdooConnection
+
+#cred = credentials.Certificate("C:/Users/desarrollo/Documents/GitHub/Registro-Remoto/prueba/serviceAccount.json")
+cred = credentials.Certificate("C:/Users/diego/OneDrive/Documentos/GitHub/Registro-Remoto/prueba/serviceAccount.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 class AppFire:
-    """adqwasdasdawdwqdw"""
+    """Clase para manejar la interfaz y la interacción con Firebase"""
 
     def __init__(self):
         self.phone_number = TextField(label="Teléfono", width=280, height=40, color='black')
         self.alldata = Column()
+        self.odoo_conn = OdooConnection()
+
 
     def getdata(self):
         """Obtener todos los datos de Firebase"""
@@ -34,6 +38,8 @@ class AppFire:
             )
         # Actualizar la interfaz después de cargar los datos
         self.alldata.update()
+
+
 
     def addnewdata(self, e):
         """Agregar datos a Firestore"""
@@ -59,9 +65,27 @@ class AppFire:
         except Exception as e:
             print("Error:", str(e))
 
+
+
+    def verificar_numero(self, e):
+        """Verificar número en Odoo y enviar código SMS si es válido"""
+        phone_number = self.phone_number.value
+
+        # Autenticación en Odoo
+        uid = self.odoo_conn.authenticate('your_odoo_username', 'your_odoo_password')
+        if uid:
+            empleado = self.odoo_conn.verificar_empleado_por_telefono(uid, 'your_odoo_password', phone_number)
+            if empleado:
+                print(f"Empleado encontrado: {empleado['name']}. Enviando código SMS...")
+            else:
+                print("No se encontró ningún empleado con ese número de teléfono.")
+        else:
+            print("Error de autenticación en Odoo.")
+
+
+
     def build(self):
         """Construir la interfaz de usuario con colores y fondo"""
-
         return Container(
             content=Row(
                 controls=[
@@ -75,13 +99,13 @@ class AppFire:
                                 ),
                                 # Campo de entrada para el número de teléfono
                                 Container(self.phone_number, alignment=alignment.center),
-                                # Botón para agregar el número de teléfono
+                                # Botón para verificar el número
                                 Container(
                                     ElevatedButton(
-                                        content=Text('Agregar', color='white', weight='w500'),
+                                        content=Text('Verificar Número', color='white', weight='w500'),
                                         width=280,
                                         bgcolor='black',
-                                        on_click=self.addnewdata
+                                        on_click=self.verificar_numero  # Aquí está la función que verifica el número
                                     ),
                                     alignment=alignment.center
                                 ),
