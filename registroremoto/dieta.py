@@ -5,51 +5,66 @@ def dieta_view(page: ft.Page):
     # Limpiar la página anterior
     page.clean()
 
-    # Crear los campos de entrada
-    titulo_field = ft.TextField(label='Título de la factura', width=280, height=40)
-    tipo_field = ft.Dropdown(
-        label='Tipo de factura',
-        options=[
-            ft.dropdown.Option("Alojamiento"),
-            ft.dropdown.Option("Alimentación"),
-            ft.dropdown.Option("Transporte")
-        ],
-        width=280,
-        height=40
+    # Crear los campos de entrada con padding individual
+    titulo_field = ft.Container(
+        content=ft.TextField(label='Título de la factura', width=175, height=40),
+        padding=ft.padding.all(10)
     )
-    precio_field = ft.TextField(label='Precio', width=280, height=40)
-    cantidad_field = ft.TextField(label='Cantidad', width=280, height=40)
-    total_field = ft.TextField(label='Total', width=280, height=40, read_only=True)
-    fecha_field = ft.TextField(label='Fecha', width=280, height=40)
-    imagen_field = ft.TextField(label='Adjuntar Imagen', width=280, height=40)
+    tipo_field = ft.Container(
+        content=ft.Dropdown(
+            label='Tipo de factura',
+            options=[
+                ft.dropdown.Option("Alojamiento"),
+                ft.dropdown.Option("Alimentación"),
+                ft.dropdown.Option("Transporte")
+            ],
+            width=175,
+            height=40
+        ),
+        padding=ft.padding.all(10)
+    )
+    precio_field = ft.Container(
+        content=ft.TextField(label='Precio', width=175, height=40),
+        padding=ft.padding.all(10)
+    )
+    cantidad_field = ft.Container(
+        content=ft.TextField(label='Cantidad', width=175, height=40),
+        padding=ft.padding.all(10)
+    )
+    total_field = ft.Container(
+        content=ft.TextField(label='Total', width=175, height=40, read_only=True),
+        padding=ft.padding.all(10)
+    )
+    fecha_field = ft.Container(
+        content=ft.TextField(label='Fecha', width=175, height=40),
+        padding=ft.padding.all(10)
+    )
 
-    # Botón para la IA (por ahora no hace nada)
     ia_button = ft.ElevatedButton(
         content=ft.Text('IA', color='white', weight='bold'),
-        width=60,
+        width=80,
         height=60,
         bgcolor='black',
-        border_radius=30,
         on_click=lambda e: None  # FUNCION PARA LA IA
     )
 
     # Función para actualizar el total automáticamente
     def actualizar_total(e):
         try:
-            precio = float(precio_field.value)
-            cantidad = int(cantidad_field.value)
+            precio = float(precio_field.content.value)
+            cantidad = int(cantidad_field.content.value)
             total = precio * cantidad
-            total_field.value = str(total)
+            total_field.content.value = str(total)
             page.update()
         except ValueError:
-            total_field.value = "Error"
+            total_field.content.value = "Error"
             page.update()
 
     # Asignar evento de cambio a los campos de precio y cantidad
-    precio_field.on_change = actualizar_total
-    cantidad_field.on_change = actualizar_total
+    precio_field.content.on_change = actualizar_total
+    cantidad_field.content.on_change = actualizar_total
 
-    # Crear el diseño basado en la imagen proporcionada
+    # Crear el diseño con más espacio entre los controles
     form_column = ft.Column(
         controls=[
             titulo_field,
@@ -63,33 +78,21 @@ def dieta_view(page: ft.Page):
         spacing=10
     )
 
-    # Contenedor para la imagen
-    image_container = ft.Container(
-        content=ft.Text('Imagen', size=18, weight='bold'),
-        width=150,
-        height=200,
-        border=ft.border.all(2, 'black'),
-        alignment=ft.alignment.center
-    )
-
     # Estructura del layout
     dieta_layout = ft.Row(
-        controls=[
-            form_column,
-            image_container,
-        ],
+        controls=[form_column],
         alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-        spacing=20
+        spacing=40
     )
 
-    # Añadir el botón de IA en la parte inferior
+    # Añadir el botón de IA en la parte inferior con espacio
     dieta_content = ft.Column(
         controls=[
             dieta_layout,
-            ft.Container(content=ia_button, alignment=ft.alignment.bottom_right)
+            ft.Container(content=ia_button, alignment=ft.alignment.bottom_right, padding=ft.padding.only(right=20, bottom=10))
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        height=500  # Ajustar la altura para que quepan todos los elementos
+        height=500
     )
 
     # Usar el fondo compartido para el contenedor principal

@@ -2,8 +2,9 @@ import flet as ft
 
 def create_background_container(content, width=325, height=450):
     """
-    Crea un contenedor con el fondo estilizado común para reutilizar en diferentes vistas.
+    Crea un contenedor con el fondo oara exportar a las vistas
     """
+
     return ft.Container(
         content=content,
         gradient=ft.LinearGradient(['#27AFE3', '#EC4A6F']),
