@@ -1,5 +1,7 @@
 import flet as ft
-from conexion import gestionar_fichaje, verificar_asistencia, obtener_nombre_usuario  # Importa la función gestionar_fichaje
+from conexion import gestionar_fichaje, verificar_asistencia, obtener_nombre_usuario 
+from fondo import create_background_container
+from dieta import dieta_view
 
 def menu_view(page: ft.Page, uid, password, employee_id):
     # Limpiar la página anterior
@@ -32,42 +34,34 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         visible=ya_fichando  # Mostrar según el estado de fichaje
     )
 
-    # Contenedor principal que incluye el mensaje y los botones
-    menu_container = ft.Container(
-        content=ft.Column(
-            controls=[
-                ft.Text("Bienvenido al menú: "+ nombre, size=24, weight="bold", color="white", text_align="center"),
-                ft.Row(
-                    controls=[entrada_button, salida_button],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    spacing=20
+    # Crear el contenido del menú
+    menu_content = ft.Column(
+        controls=[
+            ft.Text("Bienvenido al menú: " + nombre, size=24, weight="bold", color="white", text_align="center"),
+            ft.Row(
+                controls=[entrada_button, salida_button],
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=20
+            ),
+            ft.Container(
+                ft.ElevatedButton(
+                    content=ft.Text('Agregar dieta de viaje', color='white', weight='w500'),
+                    width=280,
+                    bgcolor='black',
+                    on_click=lambda e: dieta_view(page)
                 ),
-                ft.Container(
-                    ft.ElevatedButton(content=ft.Text('Agregar dieta de viaje', color='white', weight='w500'),
-                        width=280, bgcolor='black'),
-                        alignment=ft.alignment.center
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=30
-        ),
-        gradient=ft.LinearGradient(['#27AFE3', '#EC4A6F']),
-        width=325,
-        height=450,
-        border_radius=20,
-        padding=20,
-        alignment=ft.alignment.center,
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=30
     )
 
+    # Usar la función create_background_container para el fondo
+    menu_container = create_background_container(content=menu_content)
+
     # Agregar el contenedor a la página
-    page.add(
-        ft.Container(
-            content=menu_container,
-            alignment=ft.alignment.center,
-            padding=10,
-        )
-    )
+    page.add(ft.Container(content=menu_container, alignment=ft.alignment.center, padding=10))
 
     # Actualizar la página al final
     page.update()

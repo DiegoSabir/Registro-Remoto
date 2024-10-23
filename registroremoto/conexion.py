@@ -1,4 +1,4 @@
-# Protocolo Llama a Procedimiento Remoto (RPC)
+""" Protocolo Llama a Procedimiento Remoto (RPC) """
 import xmlrpc.client
 from datetime import datetime
 
@@ -9,6 +9,7 @@ DB = "FCT2024Q4B"
 
 def authenticate(username, password):
     """Autenticar usuario en Odoo y devolver UID."""
+
     common = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/common')
     try:
         uid = common.authenticate(DB, username, password, {})
@@ -19,49 +20,28 @@ def authenticate(username, password):
         print("Error al autenticar el usuario:", e)
         return None
 
-def get_version():
-    """Obtener la versión del servidor Odoo."""
-    common = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/common')
-    try:
-        version_info = common.version()
-        print("Versión de Odoo:", version_info)
-
-    except Exception as e:
-        print("Error al obtener la versión:", e)
-
 def connect_models():
     """Conectar al objeto para acceder a modelos."""
+
     return xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
 
-def list_employees(uid, password):
-    """Listar empleados en el sistema."""
-    models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
-    employees = models.execute_kw(DB, uid, password,
-                                'hr.employee', 'search_read', [[]], 
-                                {'fields': ['id', 'name']})
-    print("Empleados disponibles:")
-    for employee in employees:
-        print(employee)
-
 def obtener_nombre_usuario(uid, password, employee_uid):
+    """uygfuytfug"""
+
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
-    employee = models.execute_kw(DB, uid, password,
-                                'hr.employee', 'search_read', 
-                                [[['id', '=', employee_uid]]], 
-                                {'fields': ['name'], 'limit': 1})
+    employee = models.execute_kw(DB, uid, password, 'hr.employee', 'search_read', [[['id', '=', employee_uid]]], {'fields': ['name'], 'limit': 1})
     if employee:
         return employee[0]['name']
-    else:
-        return "Empleado no encontrado."
+    #else:
+        #return "Empleado no encontrado."
 
 
 def get_attendance_records(uid, password):
     """Obtener registros de asistencia."""
+
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
     try:
-        attendance_records = models.execute_kw(DB, uid, password,
-                                            'hr.attendance', 'search_read', [[]], 
-                                            {'fields': ['id', 'employee_id', 'check_in', 'check_out']})
+        attendance_records = models.execute_kw(DB, uid, password, 'hr.attendance', 'search_read', [[]], {'fields': ['id', 'employee_id', 'check_in', 'check_out']})
         print("Registros de asistencia:")
         for record in attendance_records:
             print(record)
@@ -71,11 +51,10 @@ def get_attendance_records(uid, password):
 
 def get_employee_id(uid, password):
     """Obtener el employee_id a partir del uid."""
+
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')  
     try:
-        user = models.execute_kw(DB, uid, password, 
-                                'res.users', 'read', [uid], 
-                                {'fields': ['employee_id']})
+        user = models.execute_kw(DB, uid, password, 'res.users', 'read', [uid], {'fields': ['employee_id']})
         
         if user and 'employee_id' in user[0]:
             employee_id = user[0]['employee_id']
@@ -97,6 +76,7 @@ def get_employee_id(uid, password):
     
 def verificar_asistencia(uid, password, employee_id):
     """Verificar si hay un registro de asistencia activo para el empleado."""
+
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
     
     # Asegúrate de que employee_id es un número entero
@@ -109,10 +89,7 @@ def verificar_asistencia(uid, password, employee_id):
             return False
 
     try:
-        attendance_records = models.execute_kw(DB, uid, password,
-                                            'hr.attendance', 'search_read', 
-                                            [[['employee_id', '=', employee_id], ['check_out', '=', False]]],
-                                            {'fields': ['id']})
+        attendance_records = models.execute_kw(DB, uid, password, 'hr.attendance', 'search_read', [[['employee_id', '=', employee_id], ['check_out', '=', False]]], {'fields': ['id']})
         return len(attendance_records) > 0  # Devuelve True si hay un registro activo
     
     except Exception as e:
@@ -121,12 +98,11 @@ def verificar_asistencia(uid, password, employee_id):
     
 def fichar_entrada(uid, password, employee_id):
     """Registrar la entrada del empleado."""
+
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
     try:
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        attendance_id = models.execute_kw(DB, uid, password, 
-                                        'hr.attendance', 'create', 
-                                        [{'employee_id': employee_id, 'check_in': current_time}])
+        attendance_id = models.execute_kw(DB, uid, password, 'hr.attendance', 'create', [{'employee_id': employee_id, 'check_in': current_time}])
         print(f"Entrada registrada con éxito (ID: {attendance_id}).")
         return True
     
@@ -136,6 +112,7 @@ def fichar_entrada(uid, password, employee_id):
     
 def fichar_salida(uid, password, employee_id):
     """Registrar la salida del empleado en el módulo de asistencias."""
+
     models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
     try:
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Obtener la hora actual
