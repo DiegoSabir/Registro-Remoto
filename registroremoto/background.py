@@ -1,3 +1,6 @@
+"""Imports"""
+
+# Third Libraries
 import flet as ft
 
 def create_background_container(content, width=325, height=450):
