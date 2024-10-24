@@ -1,6 +1,5 @@
-"""
-Imports
-"""
+"""Imports"""
+
 # Standard Imports
 import base64
 
@@ -101,12 +100,17 @@ def allowance_view(page: ft.Page, uid, password):
         on_click=register_allowance
     )
 
-    # Botón de IA
-    ia_button = ft.ElevatedButton(
-        content=ft.Text("IA", color="white", weight="bold"),
-        bgcolor="black",
-        width=90,
-        on_click=lambda e: None
+    ia_button = ft.Container(
+        content=ft.ElevatedButton(
+            content=ft.Text("IA", color="white", weight="bold"),
+            bgcolor="black",
+            width=90,
+            height=90,
+            on_click=lambda e: None
+        ),
+        alignment=ft.alignment.center,
+        border_radius=45,
+        bgcolor="transparent"
     )
 
     # Contenedor del formulario

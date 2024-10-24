@@ -1,4 +1,5 @@
 """Imports"""
+
 #Third Libraries
 import flet as ft
 
@@ -18,20 +19,20 @@ def menu_view(page: ft.Page, uid, password, employee_id):
     check_on = verify_assistance(uid, password, employee_id)
     name = get_user_name(uid, password, employee_id)
 
-    entrada_button = ft.ElevatedButton(
+    clock_in_button = ft.ElevatedButton(
         content=ft.Text("🕘 Clock In", color="white", weight="bold"),
-        on_click=lambda e: manage_check(uid, password, employee_id, 'entrada', entrada_button, salida_button, page),
+        on_click=lambda e: manage_check(uid, password, employee_id, 'entrada', clock_in_button, clock_out_button, page),
         style=ft.ButtonStyle(
             padding=ft.padding.symmetric(vertical=20, horizontal=40),
             shape=ft.RoundedRectangleBorder(20),
             bgcolor='#28A745',
         ),
-        visible=not check_on 
+        visible=not check_on
     )
 
-    salida_button = ft.ElevatedButton(
+    clock_out_button = ft.ElevatedButton(
         content=ft.Text("🚪 Clock Out", color="white", weight="bold"),
-        on_click=lambda e: manage_check(uid, password, employee_id, 'salida', entrada_button, salida_button, page),
+        on_click=lambda e: manage_check(uid, password, employee_id, 'salida', clock_in_button, clock_out_button, page),
         style=ft.ButtonStyle(
             padding=ft.padding.symmetric(vertical=20, horizontal=40),
             shape=ft.RoundedRectangleBorder(20),
@@ -45,7 +46,7 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         controls=[
             ft.Text("Welcome: \n" + name, size=24, weight="bold", color="white", text_align="center"),
             ft.Row(
-                controls=[entrada_button, salida_button],
+                controls=[clock_in_button, clock_out_button],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20
             ),

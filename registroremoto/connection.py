@@ -173,7 +173,7 @@ def clock_out(uid, password, employee_id):
 
 
 
-def manage_check(uid, password, employee_id, tipo_fichaje, entrada_button, salida_button, page):
+def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, clock_out_button, page):
     """
     Manage the clock in or out from employee depending by type
     """
@@ -181,8 +181,8 @@ def manage_check(uid, password, employee_id, tipo_fichaje, entrada_button, salid
         if not verify_assistance(uid, password, employee_id):
             result = clock_in(uid, password, employee_id)
             if result: 
-                entrada_button.visible = False  
-                salida_button.visible = True
+                clock_in_button.visible = False  
+                clock_out_button.visible = True
                 print("Fichaje de entrada registrado exitosamente.")
             else:
                 print("Error al fichar la entrada.")
@@ -194,8 +194,8 @@ def manage_check(uid, password, employee_id, tipo_fichaje, entrada_button, salid
 
             result = clock_out(uid, password, employee_id)
             if result: 
-                salida_button.visible = False
-                entrada_button.visible = True 
+                clock_out_button.visible = False
+                clock_in_button.visible = True 
                 print("Fichaje de salida registrado exitosamente.")
             else:
                 print("Error al fichar la salida.")
