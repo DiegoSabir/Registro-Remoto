@@ -10,8 +10,14 @@ from background import create_background_container
 
 def main_view(page: ft.Page):
     """
-    asdsadsasd
+    Sets up the main login view of the application.
+
+    :param page (ft.Page): The Flet page object where the components are added.
+
+    return: None
     """
+
+    # Email input configuration
     email_field = ft.TextField(
         label='Email',
         suffix_text="@galvintec.com",
@@ -20,6 +26,8 @@ def main_view(page: ft.Page):
         color='black',
         prefix_icon=ft.icons.EMAIL,
     )
+
+    # Password input configuration
     password_field = ft.TextField(
         label='Password',
         width=280,
@@ -30,32 +38,37 @@ def main_view(page: ft.Page):
         can_reveal_password=True
     )
 
+    # Configuration for error menssages
     snack_bar = ft.SnackBar(
         content=ft.Text("User or Password Incorrect"),
         action="OK"
     )
 
-    # Add snackbar to the overlay
+    # Add snackbar to the overlay to be used for error notifications
     page.overlay.append(snack_bar)
 
     def show_snack_bar():
         """
+        Displays the snackbar to indicate an error during login.
 
+        return: None
         """
         snack_bar.open = True
         page.update()
 
     def handle_login(e):
         """
-        Get the email and password from the user
+        Handles the login process when the login button is clicked.
+
+        return: None
         """
         email = email_field.value + '@galvintec.com'
         password = password_field.value
 
-        # authenticate with Odoo
+        # Authenticate with Odoo
         uid = authenticate(email, password)
         if uid:
-            # Navegar al menú si el usuario existe
+            # Navigate to the menu if the user is authenticated
             employee_id = get_employee_id(uid, password)
             if employee_id:
                 menu_view(page, uid, password, employee_id)
@@ -64,6 +77,7 @@ def main_view(page: ft.Page):
         else:
             show_snack_bar()
 
+    # Creating the login form layout
     login_form = ft.Column(controls=[
         ft.Container(ft.Image(src='images/logo.jpg', width=60, border_radius=50), alignment=ft.alignment.center),
         ft.Text('Galvintec', width=360, size=25, weight='w900', text_align='center'),
@@ -76,16 +90,20 @@ def main_view(page: ft.Page):
         ),
     ], alignment=ft.MainAxisAlignment.SPACE_EVENLY)
 
-    # Use the function create_background
+    # Wrap the login form with a background container
     body = create_background_container(content=login_form)
 
-    # add content to the main_view
+    # Add the wrapped login form to the page
     page.add(body)
 
 
 def main(page: ft.Page):
     """
-    asdasd
+    Initializes the main Flet application window.
+
+    :param page (ft.Page): The Flet page object where the components are added.
+
+    :return None
     """
     page.window.width = 600
     page.window.height = 520
@@ -93,8 +111,8 @@ def main(page: ft.Page):
     page.vertical_alignment = "center"
     page.horizontal_alignment = "center"
 
-    # Load main_view
+    # Display the main login view
     main_view(page)
 
-# Start the app
+# Launch the Flet application
 ft.app(target=main)

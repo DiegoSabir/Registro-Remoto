@@ -8,12 +8,14 @@ from datetime import datetime
 import xmlrpc.client
 import dotenv
 
+# Load environment variables from .env file
 dotenv.load_dotenv()
 
 # Get data for connection from env
 URL = os.getenv('ODOO_URL')
 DB = os.getenv('ODOO_DB')
 
+# Get xmlrpc directions for all the query
 common = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/common')
 models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
 
@@ -25,7 +27,13 @@ models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
 
 def authenticate(username, password):
     """
-    Authenticate user in Odoo and get UID
+    Authenticate the user with Odoo and retrieve the user ID (UID).
+
+    :param username (str): The user's username.
+    :param password (str): The user's password.
+
+    
+    return: int: The user ID if authentication is successful, otherwise None.
     """
     try:
         uid = common.authenticate(DB, username, password, {})
@@ -33,18 +41,21 @@ def authenticate(username, password):
         return uid
     
     except Exception as e:
-        print("Error al autenticar el usuario:", e)
+        print("Error during user authentication:", e)
         return None
 
 
 def get_employee_id(uid, password):
     """
-    asdasd
+    Retrieve the employee ID associated with the authenticated user.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+
+    :return int: The employee ID if found, otherwise None.
     """
     try:
-        user = models.execute_kw(DB, uid, password, 
-                                'res.users', 'read', [uid], 
-                                {'fields': ['employee_id']})
+        user = models.execute_kw(DB, uid, password, 'res.users', 'read', [uid], {'fields': ['employee_id']})
         
         if user and 'employee_id' in user[0]:
             employee_id = user[0]['employee_id']
@@ -52,218 +63,238 @@ def get_employee_id(uid, password):
                 employee_id = employee_id[0]
             print("Employee ID:", employee_id)
             return employee_id
-        else:
-            print("No se encontró el employee_id.")
-            return None
+        #else:
+        #    print("No se encontró el employee_id.")
+        #    return None
 
     except Exception as e:
-        print("Error al obtener el employee_id:", e)
+        print("Error retrieving employee ID:", e)
         return None
 
 def get_attendance_records(uid, password):
     """
-    asdasd
+    Retrieve and display attendance records for all users.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
     """
     try:
-        attendance_records = models.execute_kw(DB, uid, password,
-                                            'hr.attendance', 'search_read', [[]], 
-                                            {'fields': ['id', 'employee_id', 'check_in', 'check_out']})
-        print("Registros de asistencia:")
+        attendance_records = models.execute_kw(DB, uid, password, 'hr.attendance', 'search_read', [[]], {'fields': ['id', 'employee_id', 'check_in', 'check_out']})
+        print("Attendance Records:")
         for record in attendance_records:
             print(record)
 
     except Exception as e:
-        print("Error al obtener registros de asistencia:", e)
+        print("Error retrieving attendance records:", e)
         
-
 def list_employees(uid, password):
     """
-    asdasd
+    List all employees.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
     """
-    employees = models.execute_kw(DB, uid, password,
-                                'hr.employee', 'search_read', [[]], 
-                                {'fields': ['id', 'name']})
-    print("Empleados disponibles:")
+    employees = models.execute_kw(DB, uid, password, 'hr.employee', 'search_read', [[]], {'fields': ['id', 'name']})
+    print("Available Employees:")
     for employee in employees:
         print(employee)
-        
-"""
-    Menu Section
-"""
+
+
+
+"""Menu Section"""
+
+
 
 def get_user_name(uid, password, employee_uid):
     """
-    asdasd
+    Retrieve the name of the user.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_uid (int): The employee ID.
+
+    :return str: The name of the employee, or an error message if not found.
     """
-    employee = models.execute_kw(DB, uid, password,
-                                'hr.employee', 'search_read', 
-                                [[['id', '=', employee_uid]]], 
-                                {'fields': ['name'], 'limit': 1})
+    employee = models.execute_kw(DB, uid, password, 'hr.employee', 'search_read', [[['id', '=', employee_uid]]], {'fields': ['name'], 'limit': 1})
     if employee:
         return employee[0]['name']
     else:
         return "Empleado no encontrado."
-    
-    
+        
+
 def verify_assistance(uid, password, employee_id):
     """
-    asdasd
+    Check if the employee is currently checked in.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+
+    :return bool: True if the employee has an active attendance record, False otherwise.
     """
     if not isinstance(employee_id, int):
         try:
             employee_id = int(employee_id)
 
         except ValueError:
-            print("Error: employee_id no es un número entero válido")
+            print("Error: is not a valid integer")
             return False
 
     try:
-        attendance_records = models.execute_kw(DB, uid, password,
-                                            'hr.attendance', 'search_read', 
-                                            [[['employee_id', '=', employee_id], ['check_out', '=', False]]],
-                                            {'fields': ['id']})
-        return len(attendance_records) > 0  # Devuelve True si hay un registro activo
+        attendance_records = models.execute_kw(DB, uid, password, 'hr.attendance', 'search_read', [[['employee_id', '=', employee_id], ['check_out', '=', False]]], {'fields': ['id']})
+        return len(attendance_records) > 0  
     
     except Exception as e:
-        print("Error al verificar asistencia activa:", e)
+        print("Error checking active attendance:", e)
         return False
     
 def clock_in(uid, password, employee_id):
     """
-    asdasd
+    Clock in for an employee.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+
+    :return bool: True if clock-in was successful, False otherwise.
     """
     try:
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        attendance_id = models.execute_kw(DB, uid, password, 
-                                        'hr.attendance', 'create', 
-                                        [{'employee_id': employee_id, 'check_in': current_time}])
-        print(f"Entrada registrada con éxito (ID: {attendance_id}).")
+        attendance_id = models.execute_kw(DB, uid, password, 'hr.attendance', 'create', [{'employee_id': employee_id, 'check_in': current_time}])
+        print(f"Clock-in successful (ID: {attendance_id}).")
         return True
     
     except Exception as e:
-        print("Error al fichar la entrada:", e)
+        print("Error clocking in:", e)
         return False
     
 def clock_out(uid, password, employee_id):
     """
-    asdasd
+    Clock out for an employee.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+
+    :return bool: True if clock-out was successful, False otherwise.
     """
     try:
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # get present time
         # Search register of attendance
-        attendance_records = models.execute_kw(DB, uid, password, 
-                                            'hr.attendance', 'search_read', 
-                                            [[['employee_id', '=', employee_id], ['check_out', '=', False]]],
-                                            {'fields': ['id']})
+        attendance_records = models.execute_kw(DB, uid, password, 'hr.attendance', 'search_read', [[['employee_id', '=', employee_id], ['check_out', '=', False]]], {'fields': ['id']})
         if attendance_records:
             attendance_id = attendance_records[0]['id']
             # Update attendance with check out time
-            models.execute_kw(DB, uid, password, 
-                            'hr.attendance', 'write', 
-                            [[attendance_id], {'check_out': current_time}])
-            print(f"Salida registrada exitosamente para ID: {attendance_id}")
+            models.execute_kw(DB, uid, password, 'hr.attendance', 'write', [[attendance_id], {'check_out': current_time}])
+            print(f"Clock-out successful for ID: {attendance_id}")
             return True
-        else:
-            print("No se encontró un registro de entrada para este empleado.")
-            return False
+        #else:
+        #    print("No se encontró un registro de entrada para este empleado.")
+        #    return False
         
     except Exception as e:
-        print("Error al registrar la salida:", e)
+        print("Error clocking out:", e)
         return False
-
-
 
 def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, clock_out_button, page):
     """
-    Manage the clock in or out from employee depending by type
+    Manage the clock-in or clock-out process for an employee based on the type.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+    :param tipo_fichaje (str): The type of clock action ('entrada' or 'salida').
+    :param clock_in_button (ft.Button): The button used for clocking in.
+    :param clock_out_button (ft.Button): The button used for clocking out.
+    :param page (ft.Page): The current page being displayed in the interface.
     """
-    if tipo_fichaje == 'entrada':
+    if tipo_fichaje == 'enter':
         if not verify_assistance(uid, password, employee_id):
             result = clock_in(uid, password, employee_id)
             if result: 
                 clock_in_button.visible = False  
                 clock_out_button.visible = True
-                print("Fichaje de entrada registrado exitosamente.")
+                print("Clock-in recorded successfully.")
             else:
-                print("Error al fichar la entrada.")
-        else:
-            print("Ya has fichado la entrada, no puedes fichar de nuevo.")
-    
-    elif tipo_fichaje == 'salida':
-        if verify_assistance(uid, password, employee_id):
+                print("Error clocking in.")
 
+    elif tipo_fichaje == 'exit':
+        if verify_assistance(uid, password, employee_id):
             result = clock_out(uid, password, employee_id)
-            if result: 
+            if result:
                 clock_out_button.visible = False
                 clock_in_button.visible = True 
-                print("Fichaje de salida registrado exitosamente.")
+                print("Clock-out recorded successfully.")
             else:
-                print("Error al fichar la salida.")
-        else:
-            print("No puedes fichar la salida sin haber fichado la entrada.")
-    
-    else:
-        print("Tipo de fichaje no válido.")
-    
+                print("Error clocking out.")
+
     # Update flet interface
     page.update()
 
-"""
-Diet Section
-"""
 
-def send_data_invoice(uid, password, descripcion, coste, cantidad, product_id, file_data=None):
+
+""" Diet Section """
+
+
+
+def send_data_invoice(uid, password, description, cost, quantity, product_id, file_data=None):
     """
-    ddddd
+    Register an expense in Odoo.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param description (str): The description of the expense.
+    :param cost (float): The unit cost of the expense.
+    :param quantity (int): The quantity of the expense.
+    :param product_id (int): The ID of the product associated with the expense.
+    :param file_data (str, optional): Base64 encoded image data for an attachment.
+
+    return: bool: True if the expense was registered successfully, otherwise False.
     """
     expense_data = {
-        'name': descripcion,  
-        'unit_amount': float(coste), 
-        'quantity': int(cantidad),
+        'name': description,  
+        'unit_amount': float(cost), 
+        'quantity': int(quantity),
         'product_id': int(product_id),  
     }
 
     try:
-        expense_id = models.execute_kw(
-            DB, uid, password, 
-            'hr.expense', 'create', 
-            [expense_data] 
-        )
-        print(f"Gasto registrado con ID: {expense_id}")
+        expense_id = models.execute_kw(DB, uid, password, 'hr.expense', 'create', [expense_data] )
+        print(f"Expense registered with ID: {expense_id}")
 
-        # Si hay datos de imagen (file_data), adjuntar el archivo al gasto
+        # If there are images (file_data), attach it to the allowance register
         if file_data:
             attachment_data = {
-                'name': "Gasto adjunto",  # Nombre del archivo
-                'res_model': 'hr.expense',  # Modelo al que se adjunta
-                'res_id': expense_id,  # ID del registro de gasto
-                'type': 'binary',  # Tipo de archivo
-                'datas': file_data,  # Imagen en base64
+                'name': "Gasto adjunto",  # Name of the register
+                'res_model': 'hr.expense',  # Objective module
+                'res_id': expense_id,  # ID of expense register
+                'type': 'binary',  # type of file
+                'datas': file_data,  # Image in base64
                 'mimetype': 'image/jpeg',  # Tipo MIME de la imagen (ajustar según sea necesario)
             }
-
-            attachment_id = models.execute_kw(
-                DB, uid, password,
-                'ir.attachment', 'create',
-                [attachment_data]
-            )
+            attachment_id = models.execute_kw(DB, uid, password, 'ir.attachment', 'create', [attachment_data])
             print(f"Imagen adjunta con ID: {attachment_id}")
-
         return True
+    
     except Exception as e:
-        print(f"Error al registrar el gasto: {e}")
+        print(f"Error registering the expense: {e}")
         return False
     
 
 def get_products(uid, password):
     """
-    knjdsjkndajknsdanjk
+    Retrieve a list of products from Odoo.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+
+    :return list: A list of dictionaries containing product ID and name.
     """
     product_records = models.execute_kw(
         DB, uid, password,
-        'product.product', 'search_read', 
-        [[], ['name']],  
-        {'limit': 50}  
+        'product.product', 'search_read',
+        [[], ['name']],
+        {'limit': 50}
     )
 
     # Extract products with his id and name

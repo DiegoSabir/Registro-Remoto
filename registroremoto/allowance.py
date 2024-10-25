@@ -12,9 +12,15 @@ from background import create_background_container
 
 def allowance_view(page: ft.Page, uid, password):
     """
-    Vista para registrar las dietas.
-    """
+    Displays the view for registering allowances.
 
+    :param page (ft.Page): The Flet page object where the components are added.
+    :param uid (str): User ID for authentication.
+    :param password (str): User's password for authentication.
+
+    :return None
+    """
+    # Clear the current page content before setting up the form
     page.clean()
 
     # Form fields
@@ -32,13 +38,16 @@ def allowance_view(page: ft.Page, uid, password):
         color="white"
     )
 
-    # Dropdown to select products
+    # Dropdown to select the product type
     type_field = ft.Dropdown(label="Select Type", width=300)
 
     # Load products from Odoo
     def load_products():
         """
-        asdadwawd
+        Retrieves the list of products and updates the dropdown options.
+
+        Fetches product names and IDs using the provided authentication 
+        credentials and sets them as options in the dropdown field.
         """
         products = get_products(uid, password)
         
@@ -48,13 +57,19 @@ def allowance_view(page: ft.Page, uid, password):
         ]
         page.update()
 
+    # Load products into the dropdown when the view is initialized
     load_products()
 
+    # Variable to store the selected file path
     selected_file_path = None
 
     def on_image_selected(e):
         """
-        asdasdad
+        Handles the event when an image is selected.
+
+        :param e: The event object containing the file selection result.
+
+        :return None
         """
         nonlocal selected_file_path
         if e.files:
@@ -64,42 +79,50 @@ def allowance_view(page: ft.Page, uid, password):
             selected_file_path = None
             print("No image selected")
     
+    # Assign the file picker result handler
     image_picker.on_result = on_image_selected
 
-    def register_allowance():
+    def register_allowance(e):
         """
-        asdsadsada
+        Registers the allowance with the provided details.
+
+        Collects form data, encodes the attached image in base64 (if provided),
+        and sends the data for registration. Displays feedback depending on 
+        whether the registration was successful or not.
         """
         title_value = title.value
         cost_value = cost.value
         quantity_value = quantity.value
         product_id = type_field.value
         
+        # Encode the attached image in base64 if a file is selected
         file_data = None
         if image_picker.result and image_picker.result.files:
             file_path = image_picker.result.files[0].path
             with open(file_path, "rb") as f:
                 file_data = base64.b64encode(f.read()).decode('utf-8')
 
+        # Send allowance data for registration
         if send_data_invoice(uid, password, title_value, cost_value, quantity_value, product_id, file_data):
             snack_bar.open = True
         else:
             snack_bar_error.open = True
         page.update()
 
-    # Definir SnackBars
+    # Success and error notifications
     snack_bar = ft.SnackBar(content=ft.Text("Allowance registered"), action="OK")
     snack_bar_error = ft.SnackBar(content=ft.Text("Error"), action="OK")
     page.overlay.append(snack_bar)
     page.overlay.append(snack_bar_error)
 
-    # Botón de enviar
+    # Send button
     register_button = ft.ElevatedButton(
         content=ft.Text("Register", color="white", weight="bold"),
         bgcolor="black",
         on_click=register_allowance
     )
 
+    # IA button
     ia_button = ft.Container(
         content=ft.ElevatedButton(
             content=ft.Text("IA", color="white", weight="bold"),
@@ -113,7 +136,6 @@ def allowance_view(page: ft.Page, uid, password):
         bgcolor="transparent"
     )
 
-    # Contenedor del formulario
     form_content = ft.Column(
         controls=[
             ft.Text("Register Allowance", size=24, weight="bold", color="black", text_align="center"),
@@ -136,11 +158,11 @@ def allowance_view(page: ft.Page, uid, password):
         spacing=20
     )
 
-    # Aplicar el fondo usando create_background_container
+    # Wrap the form content in a background container
     form_container = create_background_container(content=form_content)
 
-    # Agregar el contenedor a la página
+    # Add the form container to the page
     page.add(ft.Container(content=form_container, alignment=ft.alignment.center, padding=10))
 
-    # Actualizar la página
+    # Update the page
     page.update()
