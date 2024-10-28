@@ -154,7 +154,7 @@ def allowance_view(page: ft.Page, uid, password):
                 ],
             )
         ],
-        alignment=ft.MainAxisAlignment.CENTER,
+        alignment=ft.alignment.center,
         spacing=20
     )
 
@@ -162,7 +162,8 @@ def allowance_view(page: ft.Page, uid, password):
     form_container = create_background_container(content=form_content)
 
     # Add the form container to the page
-    page.add(ft.Container(content=form_container, alignment=ft.alignment.center, padding=10))
+    #page.add(ft.Container(content=form_container, alignment=ft.alignment.center, padding=10))
+    page.add(form_container)
 
     # Update the page
     page.update()

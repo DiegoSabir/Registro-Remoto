@@ -74,7 +74,8 @@ def menu_view(page: ft.Page, uid, password, employee_id):
     menu_container = create_background_container(content=menu_content)
 
     # Add the container to the page
-    page.add(ft.Container(content=menu_container, alignment=ft.alignment.center, padding=10))
+    #page.add(ft.Container(content=menu_container, alignment=ft.alignment.center, padding=10))
+    page.add(menu_container)
 
     # Update the page to reflect the changes
     page.update()

@@ -80,7 +80,7 @@ def main_view(page: ft.Page):
     # Creating the login form layout
     login_form = ft.Column(controls=[
         ft.Container(ft.Image(src='images/logo.jpg', width=60, border_radius=50), alignment=ft.alignment.center),
-        ft.Text('Galvintec', width=360, size=25, weight='w900', text_align='center'),
+        ft.Container(ft.Text('Galvintec', width=360, size=25, weight='w900', text_align='center'), alignment=ft.alignment.center),
         ft.Container(email_field, alignment=ft.alignment.center),
         ft.Container(password_field, alignment=ft.alignment.center),
         ft.Container(
@@ -96,7 +96,6 @@ def main_view(page: ft.Page):
     # Add the wrapped login form to the page
     page.add(body)
 
-
 def main(page: ft.Page):
     """
     Initializes the main Flet application window.
@@ -105,8 +104,8 @@ def main(page: ft.Page):
 
     :return None
     """
-    page.window.width = 600
-    page.window.height = 520
+    page.window.width = page.window.width
+    page.window.height = page.window.height
     page.padding = 0
     page.vertical_alignment = "center"
     page.horizontal_alignment = "center"
