@@ -1,3 +1,4 @@
 flet==0.22.*
 firebase-admin==6.5.*
 openai==1.52.*
+pytz

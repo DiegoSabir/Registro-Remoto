@@ -2,11 +2,12 @@
 
 # Standard Imports
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Third Libraries
 import xmlrpc.client
 import dotenv
+import pytz
 
 # Load environment variables from .env file
 dotenv.load_dotenv()
@@ -19,10 +20,11 @@ DB = os.getenv('ODOO_DB')
 common = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/common')
 models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
 
+# Timezone set
+#TIMEZONE = pytz.timezone('Europe/Madrid')
 
 
 """Login section"""
-
 
 
 def authenticate(username, password):
@@ -37,6 +39,8 @@ def authenticate(username, password):
     """
     try:
         uid = common.authenticate(DB, username, password, {})
+        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        print("Hora actual:", current_time)
         print('UID:', uid)
         return uid
     
@@ -147,51 +151,36 @@ def verify_assistance(uid, password, employee_id):
     except Exception as e:
         print("Error checking active attendance:", e)
         return False
-    
+
 def clock_in(uid, password, employee_id):
     """
     Clock in for an employee.
-
-    :param uid (int): The user ID.
-    :param password (str): The user's password.
-    :param employee_id (int): The employee ID.
-
-    :return bool: True if clock-in was successful, False otherwise.
     """
     try:
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # Obtener la hora actual en UTC
+        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         attendance_id = models.execute_kw(DB, uid, password, 'hr.attendance', 'create', [{'employee_id': employee_id, 'check_in': current_time}])
         print(f"Clock-in successful (ID: {attendance_id}).")
         return True
-    
+
     except Exception as e:
         print("Error clocking in:", e)
         return False
-    
+
 def clock_out(uid, password, employee_id):
     """
     Clock out for an employee.
-
-    :param uid (int): The user ID.
-    :param password (str): The user's password.
-    :param employee_id (int): The employee ID.
-
-    :return bool: True if clock-out was successful, False otherwise.
     """
     try:
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # get present time
-        # Search register of attendance
+        # Obtener la hora actual en UTC
+        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         attendance_records = models.execute_kw(DB, uid, password, 'hr.attendance', 'search_read', [[['employee_id', '=', employee_id], ['check_out', '=', False]]], {'fields': ['id']})
         if attendance_records:
             attendance_id = attendance_records[0]['id']
-            # Update attendance with check out time
             models.execute_kw(DB, uid, password, 'hr.attendance', 'write', [[attendance_id], {'check_out': current_time}])
             print(f"Clock-out successful for ID: {attendance_id}")
             return True
-        #else:
-        #    print("No se encontró un registro de entrada para este empleado.")
-        #    return False
-        
+
     except Exception as e:
         print("Error clocking out:", e)
         return False
