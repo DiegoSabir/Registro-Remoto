@@ -167,3 +167,4 @@ def allowance_view(page: ft.Page, uid, password):
 
     # Update the page
     page.update()
+    

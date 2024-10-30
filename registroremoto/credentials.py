@@ -16,26 +16,21 @@ def update_env_variable(key, value, env_file='.env'):
     
     return: None
     """
-    
-    # Read the .env file if it exists
     if os.path.exists(env_file):
         with open(env_file, 'r', encoding='utf-8') as file:
             lines = file.readlines()
     else:
         lines = []
 
-    # Check if the key already exists and needs updating
     key_exists = False
     with open(env_file, 'w', encoding='utf-8') as file:
         for line in lines:
             if line.startswith(f"{key}="):
-                # Update the value of the existing key
                 file.write(f"{key}={value}\n")
                 key_exists = True
             else:
                 file.write(line)
 
-        # If the key did not exist, add it to the end
         if not key_exists:
             file.write(f"{key}={value}\n")
     

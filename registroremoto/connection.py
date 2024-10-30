@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 # Third Libraries
 import xmlrpc.client
 import dotenv
-import pytz
 
 # Load environment variables from .env file
 dotenv.load_dotenv()
