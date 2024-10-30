@@ -1,4 +1,4 @@
-flet==0.22.*
-firebase-admin==6.5.*
-openai==1.52.*
-pytz
+﻿flet==0.24.1
+firebase-admin==6.5.0
+openai==1.52.2
+pytz==2024.2

@@ -79,7 +79,7 @@ def main_view(page: ft.Page):
 
     # Creating the login form layout
     login_form = ft.Column(controls=[
-        ft.Container(ft.Image(src='images/logo.jpg', width=60, border_radius=50), alignment=ft.alignment.center),
+        ft.Container(ft.Image(src='assets/images/logo.jpg', width=60, border_radius=50), alignment=ft.alignment.center),
         ft.Container(ft.Text('Galvintec', width=360, size=25, weight='w900', text_align='center'), alignment=ft.alignment.center),
         ft.Container(email_field, alignment=ft.alignment.center),
         ft.Container(password_field, alignment=ft.alignment.center),
