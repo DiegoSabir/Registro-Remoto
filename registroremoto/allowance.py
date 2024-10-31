@@ -1,5 +1,3 @@
-"""Imports"""
-
 # Standard Imports
 import base64
 
@@ -25,8 +23,48 @@ def allowance_view(page: ft.Page, uid, password):
 
     # Form fields
     title = ft.TextField(label="Title", width=300)
-    cost = ft.TextField(label="Cost", width=300, prefix_icon=ft.icons.MONEY, prefix_text="€", hint_text="0.00")
-    quantity = ft.TextField(label="Quantity", width=300)
+
+    def validate_float(e):
+        """
+        Validates that only float values with up to two decimal places are 
+        allowed in the cost field. Clears the field if the input is invalid.
+        """
+        value = e.control.value
+        try:
+            # Convert to float to check validity
+            float_val = float(value)
+            # Split the input by the decimal point
+            parts = value.split(".")
+            # Check if the decimal part has more than 2 digits
+            if len(parts) == 2 and len(parts[1]) > 2:
+                e.control.value = "{:.2f}".format(float_val)
+        except ValueError:
+            e.control.value = ""  
+        page.update()
+
+    def validate_int(e):
+        """
+        Validates that only integer values are allowed in the quantity field.
+        Clears the field if the input is invalid.
+        """
+        if not e.control.value.isdigit():
+            e.control.value = ""  # Clear field if not a valid integer
+        page.update()
+
+    cost = ft.TextField(
+        label="Cost",
+        width=300,
+        prefix_icon=ft.icons.MONEY,
+        prefix_text="€",
+        hint_text="0.00",
+        on_change=validate_float  # Attach the float validator
+    )
+    
+    quantity = ft.TextField(
+        label="Quantity",
+        width=300,
+        on_change=validate_int  # Attach the integer validator
+    )
 
     image_picker = ft.FilePicker(on_result=lambda e: print(f"File selected: {e.files[0].name}" if e.files else "No file selected"))
     page.overlay.append(image_picker)
@@ -162,9 +200,7 @@ def allowance_view(page: ft.Page, uid, password):
     form_container = create_background_container(content=form_content)
 
     # Add the form container to the page
-    #page.add(ft.Container(content=form_container, alignment=ft.alignment.center, padding=10))
     page.add(form_container)
 
     # Update the page
     page.update()
-    
