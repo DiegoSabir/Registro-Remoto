@@ -92,10 +92,10 @@ def main_view(page: ft.Page):
         else:
             show_snack_bar()
 
-    '''
-    Env configuration section
-    '''
     def show_update_popup(e):
+        """
+        Env configuration section
+        """
         popup = ft.AlertDialog(
             title=ft.Text("Actualizar servidor de Odoo"),
             content=ft.Column([url_field, db_field]),
@@ -110,6 +110,9 @@ def main_view(page: ft.Page):
         page.update()
 
     def update_variables(e):
+        """
+        asdasd
+        """
         try:
             # Agregar comillas a los valores
             url_value = f'"{url_field.value}"'
@@ -127,71 +130,81 @@ def main_view(page: ft.Page):
             page.update()
 
         except Exception as e:
-            # Manejo de excepciones en caso de error
             show_snack_bar(f"Error al actualizar las variables de entorno: {str(e)}")
 
-        except Exception as e:
-            # Manejo de excepciones en caso de error
-            show_snack_bar("Error al actualizar las variables de entorno. Verifique los valores.")
-
     def close_popup(popup):
+        """
+        asdasd
+        """
         page.close(popup)
         page.update()
         
 
     login_form = ft.Column(
-    controls=[
-        ft.Container(
-            ft.Image(src='assets/images/logo.jpg', width=60, border_radius=50),
-            alignment=ft.alignment.center
-        ),
-        ft.Container(
-            ft.Text('Galvintec', width=360, size=25, weight='w900', text_align='center'),
-            alignment=ft.alignment.center
-        ),
-        ft.Container(email_field, alignment=ft.alignment.center),
-        ft.Container(password_field, alignment=ft.alignment.center),
-        ft.Container(
-            ft.ElevatedButton(
-                content=ft.Text('Log in', color='white', weight='w500'),
-                width=280, bgcolor='black', on_click=handle_login
-            ),
-            alignment=ft.alignment.center
-        ),
-        ft.Row(
-            alignment='center',
-            controls=[ft.Text(value='or', size=16)]
-        ),
-        ft.Container(
-            height=40,
-            width=280,
-            bgcolor='black',
-            border_radius=10,
-            on_click=show_update_popup,
-            alignment=ft.alignment.center,
-            content=ft.Row(
-                controls=[
-                    ft.Image(
-                        src='assets/odoo.PNG',
-                        width=20,  # Ajuste del tamaño de la imagen para alineación
-                        height=20
-                    ),
-                    ft.Text(
-                        value='Connect to another Odoo server',
-                        weight='w500',
-                        color='white'
-                    )
-                ],
+        controls=[
+            ft.Container(
+                ft.Image(
+                    src='assets/images/logo.jpg', 
+                    width=60, 
+                    border_radius=50),
                 alignment=ft.alignment.center
+            ),
+            ft.Container(
+                ft.Text(
+                    'Galvintec', 
+                    width=360, 
+                    size=25, 
+                    weight='w900', 
+                    text_align='center'),
+                alignment=ft.alignment.center
+            ),
+            ft.Container(
+                email_field, 
+                alignment=ft.alignment.center
+            ),
+            ft.Container(
+                password_field, 
+                alignment=ft.alignment.center
+            ),
+            ft.Container(
+                alignment=ft.alignment.center,
+                content=ft.ElevatedButton(
+                    width=280, 
+                    bgcolor='black', 
+                    on_click=handle_login,
+                    content=ft.Text(
+                        'Log in', 
+                        color='white', 
+                        weight='w500'
+                    ),
+                )
+            ),
+            ft.Container(
+                alignment=ft.alignment.center,
+                content=ft.Text(
+                        'or',
+                        size=16,
+                    )
+            ),
+            ft.Container(
+                alignment=ft.alignment.center,
+                content=ft.ElevatedButton(
+                    width=280, 
+                    bgcolor='black', 
+                    on_click=show_update_popup,
+                    content=ft.Text(
+                        'Connect to another Odoo server',
+                        color='white', 
+                        weight='w500'
+                    ),
+                )
             )
-        )
-    ],
-    alignment=ft.MainAxisAlignment.SPACE_EVENLY
+        ],
+        alignment=ft.MainAxisAlignment.CENTER
 )
-
-
     # Wrap the login form with a background container
     body = create_background_container(content=login_form)
+    body.alignment = ft.alignment.center
 
     # Add the wrapped login form to the page
     page.add(body)
