@@ -193,8 +193,6 @@ def allowance_view(page: ft.Page, uid, password):
             )
         ],
         alignment=ft.MainAxisAlignment.CENTER
-        #alignment=ft.alignment.center,
-        #spacing=20
     )
 
     # Wrap the form content in a background container
