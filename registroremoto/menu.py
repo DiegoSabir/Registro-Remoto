@@ -61,7 +61,7 @@ def menu_view(page: ft.Page, uid, password, employee_id):
                     content=ft.Text('Register Allowance', color='white', weight='w500'),
                     width=280,
                     bgcolor='black',
-                    on_click=lambda e: allowance_view(page, uid, password)
+                    on_click=lambda e: allowance_view(page, uid, password, employee_id)
                 ),
             ),
         ],

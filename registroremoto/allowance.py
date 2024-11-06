@@ -1,5 +1,6 @@
 # Standard Imports
 import base64
+import os
 
 # Third Libraries
 import flet as ft
@@ -8,13 +9,14 @@ import flet as ft
 from connection import send_data_invoice, get_products
 from background import create_background_container
 
-def allowance_view(page: ft.Page, uid, password):
+def allowance_view(page: ft.Page, uid, password, employee_id):
     """
     Displays the view for registering allowances.
 
     :param page (ft.Page): The Flet page object where the components are added.
     :param uid (str): User ID for authentication.
     :param password (str): User's password for authentication.
+    :param employee_id (str): Employee ID for context in the app.
 
     :return None
     """
@@ -22,8 +24,8 @@ def allowance_view(page: ft.Page, uid, password):
     page.clean()
 
     # Form fields
-    title = ft.TextField(label="Title", width=300)
-
+    title = ft.TextField(label="Title", width=300, on_change=lambda e: update_register_button_state())
+    
     def validate_float(e):
         """
         Validates that only float values with up to two decimal places are 
@@ -57,16 +59,16 @@ def allowance_view(page: ft.Page, uid, password):
         prefix_icon=ft.icons.MONEY,
         prefix_text="€",
         hint_text="0.00",
-        on_change=validate_float  # Attach the float validator
+        on_change=lambda e: [validate_float(e), update_register_button_state()]  # Attach validator and state update
     )
     
     quantity = ft.TextField(
         label="Quantity",
         width=300,
-        on_change=validate_int  # Attach the integer validator
+        on_change=lambda e: [validate_int(e), update_register_button_state()]  # Attach validator and state update
     )
 
-    image_picker = ft.FilePicker(on_result=lambda e: print(f"File selected: {e.files[0].name}" if e.files else "No file selected"))
+    image_picker = ft.FilePicker(on_result=lambda e: [on_image_selected(e), update_register_button_state()])
     page.overlay.append(image_picker)
 
     image_button = ft.ElevatedButton(
@@ -100,22 +102,63 @@ def allowance_view(page: ft.Page, uid, password):
 
     # Variable to store the selected file path
     selected_file_path = None
-
+    is_form_valid = False
+    
     def on_image_selected(e):
-        """
-        Handles the event when an image is selected.
-
-        :param e: The event object containing the file selection result.
-
-        :return None
-        """
         nonlocal selected_file_path
         if e.files:
-            selected_file_path = e.files[0].path
-            print(f"Image selected: {selected_file_path}")
+            file_path = e.files[0].path
+            file_extension = os.path.splitext(file_path)[1].lower()
+
+            # Check if file is an image
+            if file_extension in ['.jpg', '.jpeg', '.png']:
+                selected_file_path = file_path
+
+                # Update button to indicate attachment
+                image_button.text = "Photo Attached"
+                image_button.style = ft.ButtonStyle(bgcolor="grey")
+            else:
+                selected_file_path = None
+                # Show error notification if file is not an image
+                snack_bar_error.content.value = "Please select a valid image file (JPG, JPEG, PNG)."
+                snack_bar_error.open = True
+
         else:
             selected_file_path = None
-            print("No image selected")
+            snack_bar_error.content.value = "No image selected."
+            snack_bar_error.open = True
+        
+        page.update()  # Refresh the page to show updates
+
+    def update_register_button_state():
+        """
+        Updates the state of the register button. 
+        Enables the button if all required fields are filled and the image is valid.
+        """
+        # Check if all fields are filled and if an image is attached
+        if title.value and cost.value and quantity.value and type_field.value and selected_file_path:
+            register_button.style = ft.ButtonStyle(bgcolor="green")  # Change button color to green
+            register_button.disabled = False  # Enable the button
+        else:
+            register_button.style = ft.ButtonStyle(bgcolor="black")  # Keep button color black
+            register_button.disabled = True  # Disable the button
+        
+        page.update()
+
+    # FilePicker and Image Button configuration
+    image_picker = ft.FilePicker(on_result=on_image_selected)
+    page.overlay.append(image_picker)
+
+    image_button = ft.ElevatedButton(
+        text="Attach Photo",
+        on_click=lambda e: image_picker.pick_files(allow_multiple=False),
+        bgcolor="black",
+        color="white"
+    )
+
+    # Definir snack_bar_error para mensajes de error generales
+    snack_bar_error = ft.SnackBar(content=ft.Text("Error"), action="OK")
+    page.overlay.append(snack_bar_error)
     
     # Assign the file picker result handler
     image_picker.on_result = on_image_selected
@@ -142,7 +185,10 @@ def allowance_view(page: ft.Page, uid, password):
 
         # Send allowance data for registration
         if send_data_invoice(uid, password, title_value, cost_value, quantity_value, product_id, file_data):
+            from menu import menu_view
             snack_bar.open = True
+            page.update()
+            menu_view(page, uid, password, employee_id)
         else:
             snack_bar_error.open = True
         page.update()
@@ -157,6 +203,7 @@ def allowance_view(page: ft.Page, uid, password):
     register_button = ft.ElevatedButton(
         content=ft.Text("Register", color="white", weight="bold"),
         bgcolor="black",
+        disabled=True,
         on_click=register_allowance
     )
 
@@ -193,8 +240,6 @@ def allowance_view(page: ft.Page, uid, password):
             )
         ],
         alignment=ft.MainAxisAlignment.CENTER
-        #alignment=ft.alignment.center,
-        #spacing=20
     )
 
     # Wrap the form content in a background container
