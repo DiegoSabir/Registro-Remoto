@@ -1,75 +1,67 @@
 """IMPORTS"""
 
 # Standard Imports
-import os
 from datetime import datetime, timezone
 
 # Third Libraries
 import xmlrpc.client
-import dotenv
+# import dotenv
 
 # Load environment variables from .env file
-dotenv.load_dotenv()
+# dotenv.load_dotenv()
 
 # Get data for connection from env
-URL = os.getenv('ODOO_URL')
-DB = os.getenv('ODOO_DB')
-
-# Get xmlrpc directions for all the query
-common = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/common')
-models = xmlrpc.client.ServerProxy(f'{URL}/xmlrpc/2/object')
-
+#URL = os.getenv('ODOO_URL')
+#DB = os.getenv('ODOO_DB')
+common = None
+models = None
+DB = None
 # Timezone set
 #TIMEZONE = pytz.timezone('Europe/Madrid')
 
 
 ########################################### Login section ##########################################
 
-
-def authenticate(username, password):
+def setup_connection(url, db):
     """
-    Authenticate the user with Odoo and retrieve the user ID (UID).
-
-    :param username (str): The user's username.
-    :param password (str): The user's password.
-
     
-    return: int: The user ID if authentication is successful, otherwise None.
+    """
+    global common, models, DB  # Agregar DB como global
+    try:
+        # Configurar con allow_none=True para permitir valores None en la comunicación
+        common = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/common', allow_none=True)
+        models = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object', allow_none=True)
+        DB = db  # Ahora DB se actualizará globalmente
+        print("Conexión configurada correctamente.")
+        return True
+    except Exception as e:
+        print(f"Error al configurar la conexión: {e}")
+        return False
+
+def authenticate(email, password, url, db):
+    """
+    Autentica al usuario en el servidor Odoo utilizando XML-RPC.
     """
     try:
-        uid = common.authenticate(DB, username, password, {})
-        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        print("Hora actual:", current_time)
-        print('UID:', uid)
+        common = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/common")
+        uid = common.authenticate(db, email, password, {})
         return uid
-    
     except Exception as e:
-        print("Error during user authentication:", e)
+        print(f"Error en la autenticación: {e}")
         return None
 
 
-def get_employee_id(uid, password):
+def get_employee_id(uid, password, url, db):
     """
-    Retrieve the employee ID associated with the authenticated user.
-
-    :param uid (int): The user ID.
-    :param password (str): The user's password.
-
-    :return int: The employee ID if found, otherwise None.
+    Obtiene el ID de empleado para el usuario autenticado.
     """
     try:
-        user = models.execute_kw(DB, uid, password,
-                                'res.users', 'read', [uid],
-                                {'fields': ['employee_id']})
-        if user and 'employee_id' in user[0]:
-            employee_id = user[0]['employee_id']
-            if isinstance(employee_id, list):
-                employee_id = employee_id[0]
-            print("Employee ID:", employee_id)
-            return employee_id
-        #else:
-        #    print("No se encontró el employee_id.")
-        #    return None
+        models = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/object")
+        employee_id = models.execute_kw(db, uid, password, 'hr.employee', 'search', [[['user_id', '=', uid]]])
+        return employee_id[0] if employee_id else None
+    except Exception as e:
+        print(f"Error obteniendo el ID del empleado: {e}")
+        return None
 
     except Exception as e:
         print("Error retrieving employee ID:", e)
