@@ -5,20 +5,10 @@ from datetime import datetime, timezone
 
 # Third Libraries
 import xmlrpc.client
-# import dotenv
 
-# Load environment variables from .env file
-# dotenv.load_dotenv()
-
-# Get data for connection from env
-#URL = os.getenv('ODOO_URL')
-#DB = os.getenv('ODOO_DB')
 common = None
 models = None
-DB = None
-# Timezone set
-#TIMEZONE = pytz.timezone('Europe/Madrid')
-
+db_stored = None
 
 ########################################### Login section ##########################################
 
@@ -26,14 +16,15 @@ def setup_connection(url, db):
     """
     
     """
-    global common, models, DB  # Agregar DB como global
+    global common, models, db_stored  # Agregar DB como global
     try:
         # Configurar con allow_none=True para permitir valores None en la comunicación
         common = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/common', allow_none=True)
         models = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object', allow_none=True)
-        DB = db  # Ahora DB se actualizará globalmente
+        db_stored = db  # Ahora DB se actualizará globalmente
         print("Conexión configurada correctamente.")
         return True
+    
     except Exception as e:
         print(f"Error al configurar la conexión: {e}")
         return False
@@ -59,6 +50,7 @@ def get_employee_id(uid, password, url, db):
         models = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/object")
         employee_id = models.execute_kw(db, uid, password, 'hr.employee', 'search', [[['user_id', '=', uid]]])
         return employee_id[0] if employee_id else None
+    
     except Exception as e:
         print(f"Error obteniendo el ID del empleado: {e}")
         return None
@@ -75,7 +67,7 @@ def get_attendance_records(uid, password):
     :param password (str): The user's password.
     """
     try:
-        attendance_records = models.execute_kw(DB, uid, password,
+        attendance_records = models.execute_kw(db_stored, uid, password,
                                                'hr.attendance', 'search_read', [[]],
                                                {'fields': ['id', 'employee_id', 'check_in', 'check_out']})
         print("Attendance Records:")
@@ -92,7 +84,7 @@ def list_employees(uid, password):
     :param uid (int): The user ID.
     :param password (str): The user's password.
     """
-    employees = models.execute_kw(DB, uid, password,
+    employees = models.execute_kw(db_stored, uid, password,
                                   'hr.employee', 'search_read', [[]],
                                   {'fields': ['id', 'name']})
     print("Available Employees:")
@@ -115,7 +107,7 @@ def get_user_name(uid, password, employee_uid):
 
     :return str: The name of the employee, or an error message if not found.
     """
-    employee = models.execute_kw(DB, uid, password,
+    employee = models.execute_kw(db_stored, uid, password,
                                  'hr.employee', 'search_read', [[['id', '=', employee_uid]]],
                                  {'fields': ['name'], 'limit': 1})
     if employee:
@@ -143,7 +135,7 @@ def verify_assistance(uid, password, employee_id):
             return False
 
     try:
-        attendance_records = models.execute_kw(DB, uid, password,
+        attendance_records = models.execute_kw(db_stored, uid, password,
                                                'hr.attendance', 'search_read', [[['employee_id', '=', employee_id],
                                                ['check_out', '=', False]]], {'fields': ['id']})
         return len(attendance_records) > 0  
@@ -159,7 +151,7 @@ def clock_in(uid, password, employee_id):
     try:
         # Obtener la hora actual en UTC
         current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        attendance_id = models.execute_kw(DB, uid, password,
+        attendance_id = models.execute_kw(db_stored, uid, password,
                                           'hr.attendance', 'create',
                                           [{'employee_id': employee_id, 'check_in': current_time}])
         print(f"Clock-in successful (ID: {attendance_id}).")
@@ -176,12 +168,12 @@ def clock_out(uid, password, employee_id):
     try:
         # Obtener la hora actual en UTC
         current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        attendance_records = models.execute_kw(DB, uid, password,
+        attendance_records = models.execute_kw(db_stored, uid, password,
                                                'hr.attendance', 'search_read',
                                                [[['employee_id', '=', employee_id], ['check_out', '=', False]]], {'fields': ['id']})
         if attendance_records:
             attendance_id = attendance_records[0]['id']
-            models.execute_kw(DB, uid, password, 'hr.attendance', 'write', [[attendance_id], {'check_out': current_time}])
+            models.execute_kw(db_stored, uid, password, 'hr.attendance', 'write', [[attendance_id], {'check_out': current_time}])
             print(f"Clock-out successful for ID: {attendance_id}")
             return True
 
@@ -252,7 +244,7 @@ def send_data_invoice(uid, password, description, cost, quantity, product_id, fi
     }
 
     try:
-        expense_id = models.execute_kw(DB, uid, password,
+        expense_id = models.execute_kw(db_stored, uid, password,
                                        'hr.expense', 'create',
                                        [expense_data] )
         print(f"Expense registered with ID: {expense_id}")
@@ -267,7 +259,7 @@ def send_data_invoice(uid, password, description, cost, quantity, product_id, fi
                 'datas': file_data,  # Image in base64
                 'mimetype': 'image/jpeg',  # Tipo MIME de la imagen (ajustar según sea necesario)
             }
-            attachment_id = models.execute_kw(DB, uid, password,
+            attachment_id = models.execute_kw(db_stored, uid, password,
                                               'ir.attachment', 'create',
                                               [attachment_data])
             print(f"Imagen adjunta con ID: {attachment_id}")
@@ -288,7 +280,7 @@ def get_products(uid, password):
     :return list: A list of dictionaries containing product ID and name.
     """
     product_records = models.execute_kw(
-        DB, uid, password,
+        db_stored, uid, password,
         'product.product', 'search_read',
         [[], ['name']],
         {'limit': 50}

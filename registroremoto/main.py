@@ -1,3 +1,6 @@
+"""IMPORTS"""
+
+#Third Libraries
 import flet as ft
 
 # Local Imports
@@ -5,14 +8,13 @@ from connection import authenticate, get_employee_id, setup_connection
 from menu import menu_view
 from background import create_background_container
 
+# Define a prefix for client_storage keys
+STORAGE_PREFIX = "galvintec.main_app."
+
 def main_view(page: ft.Page):
     """
     Sets up the main login view of the application.
     """
-    
-    # Define a prefix for client_storage keys
-    STORAGE_PREFIX = "galvintec.main_app."
-
     # Retrieve stored values from client storage
     stored_url = page.client_storage.get(f"{STORAGE_PREFIX}odoo_url") or ""
     stored_db = page.client_storage.get(f"{STORAGE_PREFIX}db_name") or ""
@@ -20,11 +22,9 @@ def main_view(page: ft.Page):
     stored_password = page.client_storage.get(f"{STORAGE_PREFIX}password") or ""
     
     # Show a snackbar if URL or DB is missing
-    if not stored_url or not stored_db:
-        show_snack_bar("Please configure the Odoo URL and database.")
-    else:
+    if stored_url or stored_db:
         setup_connection(stored_url, stored_db)
-
+  
     # Define email field with pre-filled stored email
     email_field = ft.TextField(
         label='Email',
@@ -148,8 +148,8 @@ def main_view(page: ft.Page):
             title=ft.Text("Update Odoo Server Settings"),
             content=ft.Column([url_field, db_field]),
             actions=[
-                ft.TextButton("Update", on_click=update_variables),
-                ft.TextButton("Cancel", on_click=lambda e: close_popup(popup))
+                ft.TextButton("Cancel", on_click=lambda e: close_popup(popup)),
+                ft.TextButton("Update", on_click=update_variables)
             ],
             actions_alignment=ft.alignment.center,
         )
