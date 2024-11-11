@@ -24,7 +24,12 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
     page.clean()
 
     # Form fields
-    title = ft.TextField(label="Title", width=300, on_change=lambda e: update_register_button_state())
+    title = ft.TextField(label="Title", 
+                         width=300,
+                         height=50, 
+                         on_change=lambda e: update_register_button_state(),
+                         content_padding=ft.Padding(5, 3, 5, 3)
+                         )
     
     def validate_float(e):
         """
@@ -57,16 +62,20 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
     cost = ft.TextField(
         label="Cost",
         width=300,
+        height=50,
         prefix_icon=ft.icons.MONEY,
         prefix_text="€",
         hint_text="0.00",
-        on_change=lambda e: [validate_float(e), update_register_button_state()]  # Attach validator and state update
+        on_change=lambda e: [validate_float(e), update_register_button_state()],
+        content_padding=ft.Padding(5, 3, 5, 3)
     )
     
     quantity = ft.TextField(
         label="Quantity",
         width=300,
-        on_change=lambda e: [validate_int(e), update_register_button_state()]  # Attach validator and state update
+        height=50,
+        on_change=lambda e: [validate_int(e), update_register_button_state()],
+        content_padding=ft.Padding(5, 3, 5, 3)
     )
 
     image_picker = ft.FilePicker(on_result=lambda e: [on_image_selected(e), update_register_button_state()])

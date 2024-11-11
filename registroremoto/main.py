@@ -1,3 +1,6 @@
+"""Imports"""
+
+#Third Libraries
 import flet as ft
 
 # Local Imports
@@ -21,7 +24,6 @@ def show_snack_bar(page, message="User or Password Incorrect"):
     snack_bar.open = True
     page.update()
 
-# Move `load_stored_data` to a global function
 def load_stored_data(page, email_field, password_field, url_field, db_field):
     """
     Load stored data from client_storage and set the fields.
@@ -78,34 +80,38 @@ def main_view(page: ft.Page):
     email_field = ft.TextField(
         label='Email',
         width=280,
-        height=40,
+        height=50,
         color='black',
-        prefix_icon=ft.icons.EMAIL
+        prefix_icon=ft.icons.EMAIL,
+        content_padding=ft.Padding(5, 3, 5, 3)
     )
 
     # Define password field
     password_field = ft.TextField(
         label='Password',
         width=280,
-        height=40,
+        height=50,
         color='black',
         prefix_icon=ft.icons.LOCK,
         password=True,
-        can_reveal_password=True
+        can_reveal_password=True,
+        content_padding=ft.Padding(5, 3, 5, 3)
     )
 
     # Define URL and DB fields
     url_field = ft.TextField(
         label="URL from Odoo server",
         width=280,
-        height=40,
-        color='black'
+        height=50,
+        color='black',
+        content_padding=ft.Padding(5, 3, 5, 3)
     )
     db_field = ft.TextField(
         label="Database name",
         width=280,
-        height=40,
-        color='black'
+        height=50,
+        color='black',
+        content_padding=ft.Padding(5, 3, 5, 3)
     )
 
     def handle_login(e):
