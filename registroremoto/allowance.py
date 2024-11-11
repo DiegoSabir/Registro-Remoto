@@ -40,6 +40,7 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
             # Check if the decimal part has more than 2 digits
             if len(parts) == 2 and len(parts[1]) > 2:
                 e.control.value = "{:.2f}".format(float_val)
+
         except ValueError:
             e.control.value = ""  
         page.update()
@@ -68,7 +69,7 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
         on_change=lambda e: [validate_int(e), update_register_button_state()]  # Attach validator and state update
     )
 
-    image_picker = ft.FilePicker(on_result=lambda e: [on_image_selected(e)])
+    image_picker = ft.FilePicker(on_result=lambda e: [on_image_selected(e), update_register_button_state()])
     page.overlay.append(image_picker)
 
     image_button = ft.ElevatedButton(
@@ -128,21 +129,21 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
             snack_bar_error.content.value = "No image selected."
             snack_bar_error.open = True
         
-        page.update()  # Refresh the page to show updates
+        page.update()
 
     def update_register_button_state():
         """
         Updates the state of the register button. 
         Enables the button if all required fields are filled and the image is valid.
         """
-        # Check if all fields are filled and if an image is attached
+        
         if all([title.value, cost.value, quantity.value, type_field.value]):
             register_button.disabled = False  # Habilita el botón
             register_button.style = ft.ButtonStyle(bgcolor="green")  # Cambia el color del botón a verde
         else:
             register_button.disabled = True   # Deshabilita el botón si falta algún campo
             register_button.bgcolor = "black"  # Color de botón deshabilitado
-        
+
         page.update()
 
     # FilePicker and Image Button configuration
