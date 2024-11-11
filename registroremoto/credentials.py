@@ -4,7 +4,7 @@
 import os
 
 # Third Libraries
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 def update_env_variable(key, value, env_file='.env'):
     """
