@@ -5,16 +5,22 @@ from datetime import datetime, timezone
 
 # Third Libraries
 import xmlrpc.client
+import flet as ft
 
 common = None
 models = None
 db_stored = None
 
-########################################### Login section ##########################################
+########################################### Sign In Section ##########################################
 
 def setup_connection(url, db):
     """
+    Sets up the connection to the Odoo server using XML-RPC.
+
+    :param url (str): The URL of the Odoo server.
+    :param db (str): The name of the database to connect to.
     
+    :return bool: True if the connection was successfully established, False otherwise.
     """
     global common, models, db_stored
     try:
@@ -30,7 +36,14 @@ def setup_connection(url, db):
 
 def authenticate(email, password, url, db):
     """
-    Autentica al usuario en el servidor Odoo utilizando XML-RPC.
+    Authenticates the user on the Odoo server using XML-RPC.
+
+    :param email (str): The user's email.
+    :param password (str): The user's password.
+    :param url (str): The URL of the Odoo server.
+    :param db (str): The database name.
+    
+    :return int: The user ID if authentication is successful, None otherwise.
     """
     try:
         common = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/common")
@@ -43,7 +56,14 @@ def authenticate(email, password, url, db):
 
 def get_employee_id(uid, password, url, db):
     """
-    Obtiene el ID de empleado para el usuario autenticado.
+    Retrieves the employee ID for the authenticated user.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param url (str): The URL of the Odoo server.
+    :param db (str): The database name.
+    
+    :return int: The employee ID if found, None otherwise.
     """
     try:
         models = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/object")
@@ -141,10 +161,15 @@ def verify_assistance(uid, password, employee_id):
 
 def clock_in(uid, password, employee_id):
     """
-    Clock in for an employee.
+    Registers a clock-in for an employee.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+    
+    :return bool: True if the clock-in was successful, False otherwise.
     """
     try:
-        # Obtener la hora actual en UTC
         current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         attendance_id = models.execute_kw(db_stored, uid, password,
                                         'hr.attendance', 'create',
@@ -158,10 +183,15 @@ def clock_in(uid, password, employee_id):
 
 def clock_out(uid, password, employee_id):
     """
-    Clock out for an employee.
+    Registers a clock-out for an employee.
+
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+    
+    :return bool: True if the clock-out was successful, False otherwise.
     """
     try:
-        # Obtener la hora actual en UTC
         current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         attendance_records = models.execute_kw(db_stored, uid, password,
                                             'hr.attendance', 'search_read',
@@ -175,6 +205,34 @@ def clock_out(uid, password, employee_id):
     except Exception as e:
         print("Error clocking out:", e)
         return False
+
+def show_popup(page, message):
+    """
+    Creates and displays a popup with the error message.
+
+    :param page (ft.Page): The current Flet page.
+    :param message (str): The message to display in the popup.
+    """
+    popup_dialog = ft.AlertDialog(
+        title=ft.Text("Error"),
+        content=ft.Text(message),
+        actions=[
+            ft.TextButton("OK", on_click=lambda e: close_popup(page, popup_dialog))
+        ]
+    )
+    page.dialog = popup_dialog
+    popup_dialog.open = True
+    page.update()
+
+def close_popup(page, dialog):
+    """
+    Closes the popup dialog.
+
+    :param page (ft.Page): The current Flet page.
+    :param dialog (ft.AlertDialog): The dialog to close.
+    """
+    dialog.open = False
+    page.update()
 
 def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, clock_out_button, page):
     """
@@ -190,25 +248,33 @@ def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, cloc
     """
     if tipo_fichaje == 'enter':
         if not verify_assistance(uid, password, employee_id):
+
             result = clock_in(uid, password, employee_id)
-            if result: 
-                clock_in_button.visible = False  
+            if result:
+                clock_in_button.visible = False
                 clock_out_button.visible = True
                 print("Clock-in recorded successfully.")
             else:
-                print("Error clocking in.")
+                show_popup(page, "Error clocking in.")
+        else:
+            show_popup(page, "You are already clocked in on another device.")
+            clock_in_button.visible = False
+            clock_out_button.visible = True
 
     elif tipo_fichaje == 'exit':
         if verify_assistance(uid, password, employee_id):
             result = clock_out(uid, password, employee_id)
             if result:
                 clock_out_button.visible = False
-                clock_in_button.visible = True 
+                clock_in_button.visible = True
                 print("Clock-out recorded successfully.")
             else:
-                print("Error clocking out.")
+                show_popup(page, "Error clocking out.")
+        else:
+            show_popup(page, "You are not clocked in on this device.")
+            clock_out_button.visible = False
+            clock_in_button.visible = True
 
-    # Update flet interface
     page.update()
 
 
@@ -242,17 +308,15 @@ def send_data_invoice(uid, password, description, cost, quantity, product_id, fi
         expense_id = models.execute_kw(db_stored, uid, password,
                                     'hr.expense', 'create',
                                     [expense_data] )
-        print(f"Expense registered with ID: {expense_id}")
 
-        # If there are images (file_data), attach it to the allowance register
         if file_data:
             attachment_data = {
-                'name': "Gasto adjunto",  # Name of the register
-                'res_model': 'hr.expense',  # Objective module
-                'res_id': expense_id,  # ID of expense register
-                'type': 'binary',  # type of file
-                'datas': file_data,  # Image in base64
-                'mimetype': 'image/jpeg',  # Tipo MIME de la imagen (ajustar según sea necesario)
+                'name': "Gasto adjunto",
+                'res_model': 'hr.expense',
+                'res_id': expense_id,
+                'type': 'binary',
+                'datas': file_data,
+                'mimetype': 'image/jpeg',
             }
             attachment_id = models.execute_kw(db_stored, uid, password,
                                             'ir.attachment', 'create',
@@ -281,6 +345,5 @@ def get_products(uid, password):
         {'limit': 50}
     )
 
-    # Extract products with his id and name
     products = [{'id': product['id'], 'name': product['name']} for product in product_records]
     return products

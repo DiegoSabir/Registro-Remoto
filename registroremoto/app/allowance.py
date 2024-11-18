@@ -1,13 +1,16 @@
+""" IMPORTS """
 # Standard Imports
 import base64
 import os
+import json
 
 # Third Libraries
+from utils.connection import send_data_invoice, get_products
 import flet as ft
 
 # Local Imports
-from connection import send_data_invoice, get_products
-from background import create_background_container
+from .background import create_background_container
+from .ia import analyze_allowance
 
 def allowance_view(page: ft.Page, uid, password, employee_id):
     """
@@ -20,29 +23,26 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
 
     :return None
     """
-    # Clear the current page content before setting up the form
     page.clean()
 
-    # Form fields
     title = ft.TextField(label="Title", 
                          width=300,
                          height=50, 
                          on_change=lambda e: update_register_button_state(),
                          content_padding=ft.Padding(5, 3, 5, 3)
-                         )
+                        )
     
     def validate_float(e):
         """
-        Validates that only float values with up to two decimal places are 
-        allowed in the cost field. Clears the field if the input is invalid.
+        Ensures the entered value in the cost field is a valid float 
+        and limits to two decimal places if needed.
+
+        :param e: Event triggered by changes in the cost field.
         """
         value = e.control.value
         try:
-            # Convert to float to check validity
             float_val = float(value)
-            # Split the input by the decimal point
             parts = value.split(".")
-            # Check if the decimal part has more than 2 digits
             if len(parts) == 2 and len(parts[1]) > 2:
                 e.control.value = "{:.2f}".format(float_val)
 
@@ -52,11 +52,12 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
 
     def validate_int(e):
         """
-        Validates that only integer values are allowed in the quantity field.
-        Clears the field if the input is invalid.
+        Ensures the entered value in the quantity field is a valid integer.
+
+        :param e: Event triggered by changes in the quantity field.
         """
         if not e.control.value.isdigit():
-            e.control.value = ""  # Clear field if not a valid integer
+            e.control.value = ""
         page.update()
 
     cost = ft.TextField(
@@ -81,6 +82,7 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
     image_picker = ft.FilePicker(on_result=lambda e: [on_image_selected(e), update_register_button_state()])
     page.overlay.append(image_picker)
 
+
     image_button = ft.ElevatedButton(
         text="Attach Photo",
         on_click=lambda e: image_picker.pick_files(allow_multiple=False),
@@ -91,13 +93,9 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
     # Dropdown to select the product type
     type_field = ft.Dropdown(label="Select Type", width=300)
 
-    # Load products from Odoo
     def load_products():
         """
-        Retrieves the list of products and updates the dropdown options.
-
-        Fetches product names and IDs using the provided authentication 
-        credentials and sets them as options in the dropdown field.
+        Loads the product options into the dropdown based on data from the server.
         """
         products = get_products(uid, password)
         
@@ -107,29 +105,33 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
         ]
         page.update()
 
-    # Load products into the dropdown when the view is initialized
+
     load_products()
 
+    products = get_products(uid, password)
+    
     # Variable to store the selected file path
     selected_file_path = None
     is_form_valid = False
-    
+
     def on_image_selected(e):
+        """
+        Handles the selected image file and validates its format.
+
+        :param e: Event triggered by selecting an image file.
+        """
         nonlocal selected_file_path
         if e.files:
             file_path = e.files[0].path
             file_extension = os.path.splitext(file_path)[1].lower()
 
-            # Check if file is an image
             if file_extension in ['.jpg', '.jpeg', '.png']:
                 selected_file_path = file_path
-
-                # Update button to indicate attachment
                 image_button.text = "Photo Attached"
                 image_button.style = ft.ButtonStyle(bgcolor="grey")
+        
             else:
                 selected_file_path = None
-                # Show error notification if file is not an image
                 snack_bar_error.content.value = "Please select a valid image file (JPG, JPEG, PNG)."
                 snack_bar_error.open = True
 
@@ -142,20 +144,18 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
 
     def update_register_button_state():
         """
-        Updates the state of the register button. 
-        Enables the button if all required fields are filled and the image is valid.
+        Enables or disables the Register button based on the form's completeness.
         """
         
         if all([title.value, cost.value, quantity.value, type_field.value]):
-            register_button.disabled = False  # Habilita el botón
-            register_button.style = ft.ButtonStyle(bgcolor="green")  # Cambia el color del botón a verde
+            register_button.disabled = False 
+            register_button.style = ft.ButtonStyle(bgcolor="green")
         else:
-            register_button.disabled = True   # Deshabilita el botón si falta algún campo
-            register_button.bgcolor = "black"  # Color de botón deshabilitado
+            register_button.disabled = True 
+            register_button.bgcolor = "black"
 
         page.update()
 
-    # FilePicker and Image Button configuration
     image_picker = ft.FilePicker(on_result=on_image_selected)
     page.overlay.append(image_picker)
 
@@ -166,36 +166,55 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
         color="white"
     )
 
-    # Definir snack_bar_error para mensajes de error generales
+
     snack_bar_error = ft.SnackBar(content=ft.Text("Error"), action="OK")
     page.overlay.append(snack_bar_error)
     
-    # Assign the file picker result handler
     image_picker.on_result = on_image_selected
+
+
+    def analyze_and_fill_fields():
+        """
+        Analyze the image using AI and auto-fill fields in the form.
+        """
+        if selected_file_path:
+            tipo_factura, titulo, precio_unitario, cantidad = analyze_allowance(selected_file_path, products)
+        
+        try:
+            # Asignar los datos extraídos a los campos correspondientes
+            title.value = titulo  # Asignar el título de la factura (nombre del establecimiento)
+            cost.value = str(precio_unitario)  # Asignar el precio unitario (formato de costo)
+            quantity.value = str(cantidad)  # Asignar la cantidad de productos (entero)
+            type_field.value = tipo_factura
+            
+            update_register_button_state()
+            # Actualizar la interfaz con los nuevos valores
+            page.update()
+
+        except Exception as e:
+            # Mostrar un mensaje de error si algo salió mal
+            snack_bar_error.content.value = f"Error processing AI data: {str(e)}"
+            snack_bar_error.open = True
+            page.update()
+
 
     def register_allowance(e):
         """
-        Registers the allowance with the provided details.
-
-        Collects form data, encodes the attached image in base64 (if provided),
-        and sends the data for registration. Displays feedback depending on 
-        whether the registration was successful or not.
+        Enables or disables the Register button based on the form's completeness.
         """
         title_value = title.value
         cost_value = cost.value
         quantity_value = quantity.value
         product_id = type_field.value
         
-        # Encode the attached image in base64 if a file is selected
         file_data = None
         if image_picker.result and image_picker.result.files:
             file_path = image_picker.result.files[0].path
             with open(file_path, "rb") as f:
                 file_data = base64.b64encode(f.read()).decode('utf-8')
 
-        # Send allowance data for registration
         if send_data_invoice(uid, password, title_value, cost_value, quantity_value, product_id, file_data):
-            from menu import menu_view
+            from .menu import menu_view
             snack_bar.open = True
             page.update()
             menu_view(page, uid, password, employee_id)
@@ -209,7 +228,6 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
     page.overlay.append(snack_bar)
     page.overlay.append(snack_bar_error)
 
-    # Send button
     register_button = ft.ElevatedButton(
         content=ft.Text("Register", color="white", weight="bold"),
         bgcolor="black",
@@ -217,14 +235,13 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
         on_click=register_allowance
     )
 
-    # IA button
     ia_button = ft.Container(
         content=ft.ElevatedButton(
             content=ft.Text("IA", color="white", weight="bold"),
             bgcolor="black",
             width=90,
             height=90,
-            on_click=lambda e: None
+            on_click=lambda e: analyze_and_fill_fields()
         ),
         alignment=ft.alignment.center,
         border_radius=45,
@@ -252,11 +269,7 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
         alignment=ft.MainAxisAlignment.CENTER
     )
 
-    # Wrap the form content in a background container
     form_container = create_background_container(content=form_content)
-
-    # Add the form container to the page
     page.add(form_container)
 
-    # Update the page
     page.update()

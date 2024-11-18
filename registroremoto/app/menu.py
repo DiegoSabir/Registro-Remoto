@@ -1,12 +1,14 @@
 """Imports"""
 
 #Third Libraries
+from utils.connection import manage_check, verify_assistance, get_user_name 
 import flet as ft
 
 #Local Imports
-from connection import manage_check, verify_assistance, get_user_name 
-from background import create_background_container
-from allowance import allowance_view
+from .background import create_background_container
+from .allowance import allowance_view
+
+STORAGE_PREFIX = "galvintec.main_app."
 
 def menu_view(page: ft.Page, uid, password, employee_id):
     """
@@ -19,7 +21,6 @@ def menu_view(page: ft.Page, uid, password, employee_id):
 
     :return None
     """
-    # Clear the page before setting up the menu view
     page.clean()
 
     # Verify the state of the check-in and get the employee's name
@@ -48,6 +49,14 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         visible=check_on 
     )
 
+    from .signin import signin_view
+
+    def logout(e):
+        page.client_storage.set(f"{STORAGE_PREFIX}email", "")
+        page.client_storage.set(f"{STORAGE_PREFIX}password", "")
+        page.clean()
+        signin_view(page)
+
     menu_content = ft.Column(
         controls=[
             ft.Text("Welcome: \n" + name, size=24, weight="bold", color="white", text_align="center"),
@@ -64,18 +73,24 @@ def menu_view(page: ft.Page, uid, password, employee_id):
                     on_click=lambda e: allowance_view(page, uid, password, employee_id)
                 ),
             ),
+            ft.Container(
+                ft.ElevatedButton(
+                    content=ft.Text('Log out', color='white', weight='w500'),
+                    width=200,
+                    on_click=logout,
+                    style=ft.ButtonStyle(
+                        padding=ft.padding.symmetric(vertical=20, horizontal=40),
+                        shape=ft.RoundedRectangleBorder(20),
+                        bgcolor='#DC3545',
+                    ),
+                ),
+            )
         ],
         alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         spacing=30
     )
 
-    # Wrap the menu content with a background
     menu_container = create_background_container(content=menu_content)
-
-    # Add the container to the page
-    #page.add(ft.Container(content=menu_container, alignment=ft.alignment.center, padding=10))
     page.add(menu_container)
-
-    # Update the page to reflect the changes
     page.update()

@@ -1,0 +1,5 @@
+# Base requirements
+-r requirements.txt
+
+# Devel requiremnts
+wdb
