@@ -60,7 +60,7 @@ def analyze_allowance(image_picker, products):
                 ]
             }
         ],
-        "max_tokens": 150
+        "max_tokens": 120
     }
 
     # Hacer la solicitud a la API de OpenAI
