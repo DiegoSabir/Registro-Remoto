@@ -1,0 +1,16 @@
+services:
+  flet:
+    build:
+      context: ./flet/src
+      dockerfile: ../docker/Dockerfile.devel
+    environment:
+      WDB_SOCKET_SERVER: wdb
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./flet/src:/opt/flet
+    command: flet run --host * --port 8000 --web --verbose
+  wdb:
+    image: kozea/wdb
+    ports:
+      - "1984:1984"

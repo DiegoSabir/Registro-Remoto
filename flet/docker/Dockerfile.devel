@@ -1,0 +1,9 @@
+FROM python:3.11
+
+WORKDIR /opt/flet
+
+# Python dependencies
+COPY requirements.txt ./
+COPY requirements-devel.txt ./
+
+RUN pip install --no-cache-dir -r requirements-devel.txt
