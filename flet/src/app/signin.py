@@ -1,5 +1,6 @@
 import flet as ft
 from utils.connection import authenticate, get_employee_id, setup_connection
+from utils.theme_manager import ThemeManager, get_theme_colors
 from .menu import menu_view
 
 STORAGE_PREFIX = "galvintec.main_app."
@@ -53,41 +54,29 @@ def signin_view(page: ft.Page):
     page.window_height = 700
     page.window_resizable = False
     page.title = "Galvintec Sign In"
-    page.theme_mode = ft.ThemeMode.LIGHT
+    
+    theme_manager = ThemeManager(page)
+    page.theme_mode = theme_manager.get_theme_mode()
 
     def theme_changed(e):
-        page.theme_mode = (
-            ft.ThemeMode.DARK
-            if page.theme_mode == ft.ThemeMode.LIGHT
-            else ft.ThemeMode.LIGHT
-        )
-        theme_switch.label = (
-            "Dark theme" if page.theme_mode == ft.ThemeMode.LIGHT else "Light theme"
-        )
-        theme_switch.icon = (
-            ft.icons.DARK_MODE if page.theme_mode == ft.ThemeMode.LIGHT else ft.icons.LIGHT_MODE
-        )
+        theme_manager.toggle_theme()
         update_colors()
         page.update()
 
     def update_colors():
-        #
-        is_dark = page.theme_mode == ft.ThemeMode.DARK
-        body.bgcolor = ft.colors.GREY_900 if is_dark else ft.colors.WHITE
+        colors = get_theme_colors(theme_manager.is_dark_mode)
+        body.bgcolor = colors['background']
         
-        #
         for field in [email_field, password_field, url_field, db_field]:
-            field.border_color = ft.colors.BLUE_200 if is_dark else ft.colors.BLUE_400
-            field.focused_border_color = ft.colors.BLUE_400 if is_dark else ft.colors.BLUE_600
-            field.text_style = ft.TextStyle(color=ft.colors.WHITE if is_dark else ft.colors.GREY_900)
+            field.border_color = colors['secondary']
+            field.focused_border_color = colors['primary']
+            field.text_style = ft.TextStyle(color=colors['text'])
         
-        #
-        login_button.style.bgcolor = ft.colors.BLUE_400 if is_dark else ft.colors.BLUE_600
-        server_button.content.color = ft.colors.BLUE_400 if is_dark else ft.colors.BLUE_600
-        title.color = ft.colors.BLUE_200 if is_dark else ft.colors.BLUE_900
-        subtitle.color = ft.colors.GREY_400 if is_dark else ft.colors.GREY_700
-        
-        gradient_container.gradient.colors = [ft.colors.BLUE_GREY_800, ft.colors.BLUE_GREY_900] if is_dark else [ft.colors.BLUE_50, ft.colors.BLUE_100]
+        login_button.style.bgcolor = colors['primary']
+        server_button.content.color = colors['primary']
+        title.color = colors['accent']
+        subtitle.color = ft.colors.GREY_400 if theme_manager.is_dark_mode else ft.colors.GREY_700
+        gradient_container.gradient.colors = colors['gradient']
 
     def create_text_field(label, icon, password=False):
         return ft.TextField(
@@ -108,7 +97,7 @@ def signin_view(page: ft.Page):
     db_field = create_text_field("Database Name", ft.icons.INBOX)
 
     theme_switch = ft.IconButton(
-        icon=ft.icons.DARK_MODE,
+        icon=ft.icons.DARK_MODE if not theme_manager.is_dark_mode else ft.icons.LIGHT_MODE,
         icon_color=ft.colors.BLUE_400,
         icon_size=20,
         tooltip="Switch theme",
@@ -141,14 +130,31 @@ def signin_view(page: ft.Page):
             show_snack_bar(page, "Authentication failed.")
 
     def show_update_popup(e=None):
+        colors = get_theme_colors(theme_manager.is_dark_mode)
+        
+        # Update field styles
+        url_field.text_style = ft.TextStyle(color=colors['text'])
+        db_field.text_style = ft.TextStyle(color=colors['text'])
+        
         popup = ft.AlertDialog(
-            title=ft.Text("Update Odoo Server Settings", size=20, weight=ft.FontWeight.BOLD),
+            title=ft.Text("Update Odoo Server Settings", 
+                         size=20, 
+                         weight=ft.FontWeight.BOLD,
+                         color=colors['text']),
             content=ft.Column([url_field, db_field], spacing=20),
             actions=[
-                ft.ElevatedButton("Update", on_click=update_variables, style=ft.ButtonStyle(color=ft.colors.WHITE, bgcolor=ft.colors.BLUE_400)),
-                ft.OutlinedButton("Cancel", on_click=lambda _: close_popup(popup))
+                ft.ElevatedButton(
+                    "Update",
+                    on_click=update_variables,
+                    style=ft.ButtonStyle(color=ft.colors.WHITE, bgcolor=colors['primary'])
+                ),
+                ft.OutlinedButton(
+                    "Cancel",
+                    on_click=lambda _: close_popup(popup)
+                )
             ],
             actions_alignment=ft.MainAxisAlignment.END,
+            bgcolor=colors['background']
         )
         page.dialog = popup
         popup.open = True
@@ -229,5 +235,9 @@ def signin_view(page: ft.Page):
         )
     )
 
+    update_colors()
+    theme_manager.add_listener(lambda _: update_colors())
+    
     page.add(gradient_container)
     load_stored_data(page, email_field, password_field, url_field, db_field)
+

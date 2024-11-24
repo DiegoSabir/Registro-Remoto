@@ -1,10 +1,6 @@
-"""Imports"""
-
-#Third Libraries
-from utils.connection import manage_check, verify_assistance, get_user_name 
 import flet as ft
-
-#Local Imports
+from utils.connection import manage_check, verify_assistance, get_user_name
+from utils.theme_manager import ThemeManager, get_theme_colors
 from .allowance import allowance_view
 
 STORAGE_PREFIX = "galvintec.main_app."
@@ -54,6 +50,16 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         check_on
     )
 
+    theme_manager = ThemeManager(page)
+
+    def update_colors():
+        colors = get_theme_colors(theme_manager.is_dark_mode)
+        menu_container.bgcolor = colors['background']
+        welcome_text.color = colors['accent']
+        name_text.color = colors['primary']
+        divider.color = colors['secondary']
+        gradient_container.gradient.colors = colors['gradient']
+
     from .signin import signin_view
 
     def logout(e):
@@ -62,6 +68,10 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         page.clean()
         signin_view(page)
 
+    welcome_text = ft.Text("Welcome", size=24, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+    name_text = ft.Text(name, size=28, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER)
+    divider = ft.Divider(height=2)
+
     menu_content = ft.Column(
         controls=[
             ft.Container(
@@ -69,9 +79,9 @@ def menu_view(page: ft.Page, uid, password, employee_id):
                 alignment=ft.alignment.center,
                 margin=ft.margin.only(bottom=20)
             ),
-            ft.Text("Welcome", size=24, color=ft.colors.BLUE_GREY_800 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_GREY_200, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-            ft.Text(name, size=28, color=ft.colors.BLUE_600 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_300, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-            ft.Divider(height=2, color=ft.colors.BLUE_200 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_700),
+            welcome_text,
+            name_text,
+            divider,
             ft.Container(height=20),
             clock_in_button,
             clock_out_button,
@@ -98,26 +108,29 @@ def menu_view(page: ft.Page, uid, password, employee_id):
         content=menu_content,
         width=360,
         padding=20,
-        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_900,
         border_radius=10,
         shadow=ft.BoxShadow(
             spread_radius=1,
             blur_radius=10,
-            color=ft.colors.BLUE_GREY_300 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLACK,
             offset=ft.Offset(0, 0),
         )
     )
 
-    page.add(
-        ft.Container(
-            content=menu_container,
-            alignment=ft.alignment.center,
-            expand=True,
-            gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,
-                end=ft.alignment.bottom_center,
-                colors=[ft.colors.BLUE_50, ft.colors.BLUE_100] if page.theme_mode == ft.ThemeMode.LIGHT else [ft.colors.GREY_900, ft.colors.GREY_800]
-            )
+    gradient_container = ft.Container(
+        content=menu_container,
+        alignment=ft.alignment.center,
+        expand=True,
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.top_center,
+            end=ft.alignment.bottom_center,
+            colors=[]
         )
     )
+
+    update_colors()  # Initial color setup
+    theme_manager.add_listener(lambda _: update_colors())  # Listen for theme changes
+
+    page.theme_mode = theme_manager.get_theme_mode()
     page.update()
+
+    page.add(gradient_container)

@@ -1,6 +1,7 @@
 import base64
 import flet as ft
 from utils.connection import send_data_invoice, get_products
+from utils.theme_manager import ThemeManager, get_theme_colors
 from .ia import analyze_allowance
 
 
@@ -12,6 +13,20 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
     page.window_height = 700
     page.window_resizable = False
     page.title = "Galvintec Allowance Registration"
+
+    theme_manager = ThemeManager(page)
+
+    def update_colors():
+        colors = get_theme_colors(theme_manager.is_dark_mode)
+        page.bgcolor = colors['background']
+        form_container.bgcolor = colors['background']
+        title_text.color = colors['accent']
+        divider.color = colors['secondary']
+
+        for field in [title, cost, quantity, type_field]:
+            field.border_color = colors['secondary']
+            field.focused_border_color = colors['primary']
+            field.text_style = ft.TextStyle(color=colors['text'])
 
     def create_text_field(label, width=300, prefix_icon=None, prefix_text=None, hint_text=None, validator=None):
         return ft.TextField(
@@ -160,9 +175,12 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
 
     back_button = create_button("Back", ft.icons.ARROW_BACK, ft.colors.BLUE_GREY_600, go_back, width=100)
 
+    title_text = ft.Text("Register Allowance", size=24, weight=ft.FontWeight.BOLD)
+    divider = ft.Divider(height=2)
+
     form_content = ft.Column([
-        ft.Text("Register Allowance", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
-        ft.Divider(height=2, color=ft.colors.BLUE_200),
+        title_text,
+        divider,
         type_field,
         title,
         cost,
@@ -171,26 +189,24 @@ def allowance_view(page: ft.Page, uid, password, employee_id):
         ft.Row([back_button, register_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
     ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
 
-    page.add(
-        ft.Container(
-            content=form_content,
-            width=360,
-            padding=20,
-            bgcolor=ft.colors.WHITE,
-            border_radius=10,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=10,
-                color=ft.colors.BLUE_GREY_300,
-                offset=ft.Offset(0, 0),
-            )
+    form_container = ft.Container(
+        content=form_content,
+        width=360,
+        padding=20,
+        border_radius=10,
+        shadow=ft.BoxShadow(
+            spread_radius=1,
+            blur_radius=10,
+            offset=ft.Offset(0, 0),
         )
     )
+
+    update_colors()  # Initial color setup
+    theme_manager.add_listener(lambda _: update_colors())  # Listen for theme changes
+
+    # Aplicar el tema guardado
+    page.theme_mode = theme_manager.get_theme_mode()
     page.update()
 
-# For demonstration purposes
-if __name__ == "__main__":
-    def main(page: ft.Page):
-        allowance_view(page, "dummy_uid", "dummy_password", "dummy_employee_id")
-
-    ft.app(target=main)
+    page.add(form_container)
+    page.update()
