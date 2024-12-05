@@ -3,17 +3,40 @@
 import base64
 import requests
 
+# Third Imports
 from app.credentials import CHATGPT_API_KEY
 
 API_KEY = CHATGPT_API_KEY
 
-def analyze_allowance(image_picker, products):
+def analyze_invoice(image_picker, products):
     """
-    Analyzes the image and returns processed data as variables.
+    Analyzes an invoice or simplified invoice using GPT-based AI to extract 
+    key details such as type of invoice, title, unit price, and quantity.
+
+    Args:
+        image_picker (str): Path to the image file of the invoice.
+        products (list): List of products to classify the type of invoice.
+
+    Returns:
+        tuple: Contains the following extracted data:
+            - tipo_factura (int): ID representing the type of invoice.
+            - titulo (str): Title containing the name of the establishment 
+              or service followed by the CIF (if available).
+            - precio_unitario (float): Unit price formatted as a float.
+            - cantidad (int): Quantity of the product.
+
+    Raises:
+        Exception: If there is an error in processing the AI response.
     """
     def encode_image_to_base64(image_path):
         """
-        Encodes image to base64 format.
+        Encodes the image at the given path into a Base64 string for transmission.
+
+        Args:
+            image_path (str): Path to the image file to be encoded.
+
+        Returns:
+            str: Base64 encoded string of the image file.
         """
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')
@@ -23,10 +46,10 @@ def analyze_allowance(image_picker, products):
     encoded_image = encode_image_to_base64(image_path)
 
     question = ("Analiza este documento, el cual puede ser una factura o una factura simplificada y obten, "
-                "el tipo de factura, será uno de los elementos de esta lista, si no saber cual decidir, usa el id 0 - expenses (", products, ")"
-                "el titulo(su valor sera el nombre del establecimiento o servicio), "
-                "el precio por unidad(0.00), "
-                "la cantidad de unidad(int), en caso de detectar distintos productos, coloca el precio total de unidad y de cantidad el valor sera 1.")
+                "el tipo de factura, será uno de los elementos de esta lista (", products, ") , si no sabes cual decidir, usa el id 0 - expenses"
+                "el titulo(su valor sera el nombre del establecimiento o servicio, seguido de un '-' y el CIF, en caso de no encontrar el CIF, deja esa parte en blanco), "
+                "el precio por unidad(el valor será String pero con formato 0.00, no introduzcas caracteres no numéricos exceptuando el punto decimal), en caso de detectar varios productos distintos, el valor será el precio total de la factura, "
+                "la cantidad de unidad(el valor será String pero con un numero, no introduzcas caracteres no numéricos), en caso de detectar varios productos distintos, el valor será 1.")
 
     rule_instructions = "Eres un asistente que extrae los datos especificos de facturas" 
 

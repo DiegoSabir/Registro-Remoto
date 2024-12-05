@@ -133,31 +133,100 @@ def get_user_name(uid, password, employee_uid):
 
 def verify_assistance(uid, password, employee_id):
     """
-    Check if the employee is currently checked in.
+    Check if the employee is currently checked in and retrieve the check-in time.
 
     :param uid (int): The user ID.
     :param password (str): The user's password.
     :param employee_id (int): The employee ID.
 
-    :return bool: True if the employee has an active attendance record, False otherwise.
+    :return tuple: (bool, str) A tuple where the first value indicates if the employee is checked in, and the second is the check-in time (or None if not found).
     """
     if not isinstance(employee_id, int):
         try:
             employee_id = int(employee_id)
-
         except ValueError:
-            print("Error: is not a valid integer")
-            return False
+            print("Error: Employee ID is not a valid integer")
+            return False, None
 
     try:
-        attendance_records = models.execute_kw(db_stored, uid, password,
-                                            'hr.attendance', 'search_read', [[['employee_id', '=', employee_id],
-                                            ['check_out', '=', False]]], {'fields': ['id']})
-        return len(attendance_records) > 0  
-    
+        attendance_records = models.execute_kw(
+            db_stored, uid, password,
+            'hr.attendance', 'search_read',
+            [[['employee_id', '=', employee_id], ['check_out', '=', False]]],
+            {'fields': ['id', 'check_in']}
+        )
+        if attendance_records:
+            check_in_time = attendance_records[0].get('check_in')
+            
+            return True, check_in_time
+        return False, None
     except Exception as e:
         print("Error checking active attendance:", e)
-        return False
+        return False, None
+
+def update_work_hours(uid, password, employee_id, check_in_text, page):
+    """
+    Updates the total working hours for the day based on clock-in and clock-out times.
+    
+    :param uid (int): The user ID.
+    :param password (str): The user's password.
+    :param employee_id (int): The employee ID.
+    :param check_in_text (ft.Text): The text widget to display the total worked hours.
+    """
+    try:
+        # Get today's date in YYYY-MM-DD format
+        today_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        
+        # Fetch attendance records for today
+        attendance_records = models.execute_kw(
+            db_stored, uid, password,
+            'hr.attendance', 'search_read',
+            [[['employee_id', '=', employee_id], 
+              ['check_in', '>=', today_date + ' 00:00:00'],
+              ['check_in', '<=', today_date + ' 23:59:59']]],  # Fetch only today's records
+            {'fields': ['check_in', 'check_out']}
+        )
+        
+
+        total_worked_seconds = 0
+        now_time = datetime.now(timezone.utc)  # Get the current UTC time
+
+        for record in attendance_records:
+            # Convert check_in to datetime and ensure it is timezone-aware (UTC)
+            check_in_time = datetime.strptime(record['check_in'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            
+            if record['check_out']:
+                # If check_out exists, calculate time between check_in and check_out
+                check_out_time = datetime.strptime(record['check_out'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+                worked_time = check_out_time - check_in_time
+            else:
+                # If check_out is missing, calculate time between check_in and now
+                worked_time = now_time - check_in_time
+            
+            total_worked_seconds += worked_time.total_seconds()
+
+        # Convert total worked time in seconds to hours and minutes
+        worked_hours = int(total_worked_seconds // 3600)  # Convert to integer
+        worked_minutes = int((total_worked_seconds % 3600) // 60)  # Convert to integer
+        
+        # Debugging: Check worked hours and minutes
+        print(f"Worked hours: {worked_hours}, Worked minutes: {worked_minutes}")
+
+        # Update the check_in_text to show the total worked hours
+        if total_worked_seconds > 0:
+            check_in_text.value = f"Total worked today: {worked_hours} hours {worked_minutes} minutes"
+        else:
+            check_in_text.value = "No work hours recorded for today."
+        
+        check_in_text.visible = True
+
+    except Exception as e:
+        print(f"Error calculating work hours: {e}")
+        check_in_text.value = "Error calculating work hours."
+        check_in_text.visible = True
+
+    # Update the page to reflect changes
+    page.update()
 
 def clock_in(uid, password, employee_id):
     """
@@ -234,26 +303,29 @@ def close_popup(page, dialog):
     dialog.open = False
     page.update()
 
-def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, clock_out_button, page):
+def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, clock_out_button, page, check_in_text):
     """
     Manage the clock-in or clock-out process for an employee based on the type.
 
     :param uid (int): The user ID.
     :param password (str): The user's password.
     :param employee_id (int): The employee ID.
-    :param tipo_fichaje (str): The type of clock action ('entrada' or 'salida').
+    :param tipo_fichaje (str): The type of clock action ('enter' or 'exit').
     :param clock_in_button (ft.Button): The button used for clocking in.
     :param clock_out_button (ft.Button): The button used for clocking out.
     :param page (ft.Page): The current page being displayed in the interface.
+    :param check_in_text (ft.Text): The text widget displaying the clock-in time.
     """
     if tipo_fichaje == 'enter':
-        if not verify_assistance(uid, password, employee_id):
-
+        is_checked_in, check_in_time = verify_assistance(uid, password, employee_id)
+        if not is_checked_in:
             result = clock_in(uid, password, employee_id)
             if result:
                 clock_in_button.visible = False
                 clock_out_button.visible = True
                 print("Clock-in recorded successfully.")
+
+                update_work_hours(uid, password, employee_id, check_in_text, page)
             else:
                 show_popup(page, "Error clocking in.")
         else:
@@ -262,12 +334,18 @@ def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, cloc
             clock_out_button.visible = True
 
     elif tipo_fichaje == 'exit':
-        if verify_assistance(uid, password, employee_id):
+        is_checked_in, _ = verify_assistance(uid, password, employee_id)
+        if is_checked_in:
             result = clock_out(uid, password, employee_id)
             if result:
                 clock_out_button.visible = False
                 clock_in_button.visible = True
+                update_work_hours(uid, password, employee_id, check_in_text, page)
                 print("Clock-out recorded successfully.")
+                
+                # Hide the clock-in time
+                check_in_text.value = ""
+                check_in_text.visible = False
             else:
                 show_popup(page, "Error clocking out.")
         else:
@@ -276,7 +354,6 @@ def manage_check(uid, password, employee_id, tipo_fichaje, clock_in_button, cloc
             clock_in_button.visible = True
 
     page.update()
-
 
 
 ############################################ Allowance Section #####################################
@@ -347,3 +424,63 @@ def get_products(uid, password):
 
     products = [{'id': product['id'], 'name': product['name']} for product in product_records]
     return products
+
+
+
+############################################ ALlowance List Section #####################################
+
+
+
+def get_employee_expenses(uid, password):
+    """
+    Obtener los gastos registrados por el empleado.
+
+    :param uid (int): El ID del usuario.
+    :param password (str): La contraseña del usuario.
+    
+    :return: List of expenses registered by the employee.
+    """
+    try:
+        # Primero obtener el ID del empleado del usuario actual
+        employee_id = models.execute_kw(db_stored, uid, password, 
+                                        'hr.employee', 'search',
+                                        [[['user_id', '=', uid]]])  # Filtramos por el usuario
+        
+        if not employee_id:
+            print("Empleado no encontrado.")
+            return []
+
+        # Ahora obtenemos los gastos relacionados con este empleado
+        expenses = models.execute_kw(db_stored, uid, password, 
+                                    'hr.expense', 'search_read',
+                                    [[['employee_id', '=', employee_id[0]]]], 
+                                    {'fields': ['name', 'unit_amount', 'quantity', 'product_id', 'date', 'state']})
+
+        return expenses
+    
+    except Exception as e:
+        print(f"Error fetching expenses: {e}")
+        return []
+    
+def delete_expense(uid, password, expense_id, page):
+    """
+    Eliminar un gasto registrado por el empleado.
+
+    :param uid (int): El ID del usuario.
+    :param password (str): La contraseña del usuario.
+    :param expense_id (int): El ID del gasto a eliminar.
+    
+    :return: True si se eliminó el gasto, False si hubo un error.
+    """
+    try:
+        # Eliminar el gasto
+        models.execute_kw(db_stored, uid, password, 
+                        'hr.expense', 'unlink', 
+                        [[expense_id]])
+        print(f"Gasto con ID {expense_id} eliminado.")
+        page.update()
+        return True
+    
+    except Exception as e:
+        print(f"Error eliminando el gasto: {e}")
+        return False
